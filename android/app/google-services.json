@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "423213236633",
+    "project_id": "chargego-4e169",
+    "storage_bucket": "chargego-4e169.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:423213236633:android:b0ec1926b83be3c0fad308",
+        "android_client_info": {
+          "package_name": "com.example.chargego"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjodaxUXeRBdlh27_2LSy4_Zl80908I2Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
