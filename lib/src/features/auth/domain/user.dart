@@ -4,6 +4,7 @@ class User {
   final String? name;
   final String? phoneNumber;
   final String? avatarUrl;
+  final String? avatarBase64;
   final double balance;
   final String status;
 
@@ -13,6 +14,7 @@ class User {
     this.name,
     this.phoneNumber,
     this.avatarUrl,
+    this.avatarBase64,
     this.balance = 0.0,
     this.status = 'activo',
   });
@@ -23,7 +25,8 @@ class User {
       email: json['email'] as String,
       name: (json['name'] ?? _fullNameFromSchema(json)) as String?,
       phoneNumber: (json['phoneNumber'] ?? json['telefono']) as String?,
-      avatarUrl: (json['avatarUrl'] ?? json['avatar_url']) as String?,
+      avatarUrl: (json['avatarUrl'] ?? json['avatar_url'] ?? json['photoUrl']) as String?,
+      avatarBase64: json['avatar_base64'] as String?,
       balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
       status: (json['status'] ?? json['estado'] ?? 'activo') as String,
     );
@@ -36,6 +39,8 @@ class User {
       'name': name,
       'phoneNumber': phoneNumber,
       'avatarUrl': avatarUrl,
+      'avatar_url': avatarUrl,
+      'avatar_base64': avatarBase64,
       'balance': balance,
       'status': status,
     };
@@ -49,6 +54,8 @@ class User {
       'email': email,
       'telefono': phoneNumber ?? '',
       'estado': status,
+      'avatar_url': avatarUrl ?? '',
+      'avatar_base64': avatarBase64 ?? '',
     };
   }
 
@@ -58,6 +65,7 @@ class User {
     String? name,
     String? phoneNumber,
     String? avatarUrl,
+    String? avatarBase64,
     double? balance,
     String? status,
   }) {
@@ -67,6 +75,7 @@ class User {
       name: name ?? this.name,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      avatarBase64: avatarBase64 ?? this.avatarBase64,
       balance: balance ?? this.balance,
       status: status ?? this.status,
     );
