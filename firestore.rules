@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function ownsExistingDocument(field) {
+      return signedIn() && resource.data[field] == request.auth.uid;
+    }
+
+    function ownsIncomingDocument(field) {
+      return signedIn() && request.resource.data[field] == request.auth.uid;
+    }
+
+    match /usuarios/{userId} {
+      allow read, update, delete: if isUser(userId);
+      allow create: if isUser(userId)
+        && request.resource.data.id_usuario == request.auth.uid;
+    }
+
+    match /metodos_pago/{methodId} {
+      allow read: if ownsExistingDocument('id_usuario');
+      allow create: if ownsIncomingDocument('id_usuario');
+      allow update, delete: if ownsExistingDocument('id_usuario')
+        && ownsIncomingDocument('id_usuario');
+    }
+
+    match /alquileres/{rentalId} {
+      allow read: if ownsExistingDocument('id_usuario');
+      allow create: if ownsIncomingDocument('id_usuario')
+        && request.resource.data.estado == 'activo';
+      allow update: if ownsExistingDocument('id_usuario')
+        && ownsIncomingDocument('id_usuario');
+      allow delete: if false;
+    }
+
+    match /pagos/{paymentId} {
+      allow read: if ownsExistingDocument('id_usuario');
+      allow create: if ownsIncomingDocument('id_usuario');
+      allow update, delete: if false;
+    }
+
+    match /incidencias/{incidentId} {
+      allow read, update, delete: if ownsExistingDocument('id_usuario');
+      allow create: if ownsIncomingDocument('id_usuario');
+    }
+
+    match /estaciones/{stationId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /tarifas/{rateId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /baterias/{batteryId} {
+      allow read: if true;
+      allow update: if signedIn();
+      allow create, delete: if false;
+    }
+  }
+}

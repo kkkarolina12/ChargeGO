@@ -56,9 +56,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: colorScheme.primary),
+        leading: const SizedBox.shrink(),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
