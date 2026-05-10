@@ -26,8 +26,12 @@ class ProfileScreen extends ConsumerWidget {
           Center(
             child: CircleAvatar(
               radius: 50,
-              backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
-              child: user?.avatarUrl == null ? const Icon(Icons.person, size: 50) : null,
+              backgroundImage: user?.avatarUrl != null
+                  ? NetworkImage(user!.avatarUrl!)
+                  : null,
+              child: user?.avatarUrl == null
+                  ? const Icon(Icons.person, size: 50)
+                  : null,
             ),
           ),
           const SizedBox(height: 16),
@@ -58,6 +62,11 @@ class ProfileScreen extends ConsumerWidget {
             leading: const Icon(Icons.help_outline),
             title: const Text('Support'),
             onTap: () => context.push('/support'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Settings'),
+            onTap: () => context.push('/settings'),
           ),
           const Divider(),
           ListTile(

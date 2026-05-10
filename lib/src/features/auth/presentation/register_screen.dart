@@ -29,7 +29,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await ref.read(authRepositoryProvider).createUserWithEmailAndPassword(
+        await ref
+            .read(authRepositoryProvider)
+            .createUserWithEmailAndPassword(
               _emailController.text,
               _passwordController.text,
             );
@@ -38,9 +40,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
         }
       } finally {
         if (mounted) {
@@ -52,12 +54,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: Theme.of(context).primaryColor),
+        leading: BackButton(color: colorScheme.primary),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -72,7 +75,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -80,7 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   'Sign up to get started',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey.shade600,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -95,7 +98,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty || !value.contains('@')) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        !value.contains('@')) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -144,8 +149,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -167,7 +172,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     Text(
                       "Already have an account? ",
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
                     ),
                     TextButton(
                       onPressed: () => context.pop(),

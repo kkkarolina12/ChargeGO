@@ -19,7 +19,9 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     if (widget.powerBankId != null) {
       // Start rental if powerBankId is provided (from QR scan)
       Future.microtask(() {
-        ref.read(rentalControllerProvider.notifier).startNewRental(widget.powerBankId!);
+        ref
+            .read(rentalControllerProvider.notifier)
+            .startNewRental(widget.powerBankId!);
       });
     }
   }
@@ -39,7 +41,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Active Rental'),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         leading: IconButton(
@@ -50,71 +52,82 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : rental == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('No active rental found'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => context.go('/home'),
-                        child: const Text('Go Home'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('No active rental found'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.go('/home'),
+                    child: const Text('Go Home'),
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildHeader(rental),
-                      const SizedBox(height: 32),
-                      _buildTimerCard(state.elapsed, state.estimatedPrice),
-                      const SizedBox(height: 32),
-                      _buildDetailsCard(rental),
-                      const Spacer(),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await ref.read(rentalControllerProvider.notifier).stopRental();
-                          if (!context.mounted) return;
-                          
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Rental completed successfully!')),
-                          );
-                          context.go('/home');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(rental),
+                  const SizedBox(height: 32),
+                  _buildTimerCard(state.elapsed, state.estimatedPrice),
+                  const SizedBox(height: 32),
+                  _buildDetailsCard(rental),
+                  const Spacer(),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await ref
+                          .read(rentalControllerProvider.notifier)
+                          .stopRental();
+                      if (!context.mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Rental completed successfully!'),
                         ),
-                        child: const Text(
-                          'RETURN POWERBANK',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                      );
+                      context.go('/home');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
+                    ),
+                    child: const Text(
+                      'RETURN POWERBANK',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildHeader(rental) {
     return Column(
       children: [
-        Icon(Icons.battery_charging_full, size: 64, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          Icons.battery_charging_full,
+          size: 64,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(height: 16),
         Text(
           'Enjoy your ChargeGO!',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       ],
     );
@@ -124,9 +137,13 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        ),
       ),
       child: Column(
         children: [
@@ -151,10 +168,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Estimated Price:',
-                style: TextStyle(fontSize: 16),
-              ),
+              const Text('Estimated Price:', style: TextStyle(fontSize: 16)),
               Text(
                 '\$${price.toStringAsFixed(2)}',
                 style: TextStyle(
@@ -175,7 +189,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -209,7 +223,11 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey),
+          Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -217,11 +235,17 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),

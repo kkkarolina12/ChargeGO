@@ -27,7 +27,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await ref.read(authRepositoryProvider).signInWithEmailAndPassword(
+        await ref
+            .read(authRepositoryProvider)
+            .signInWithEmailAndPassword(
               _emailController.text,
               _passwordController.text,
             );
@@ -36,9 +38,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
         }
       } finally {
         if (mounted) {
@@ -50,12 +52,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: Theme.of(context).primaryColor),
+        leading: BackButton(color: colorScheme.primary),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -70,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -78,7 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   'Sign in to continue',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey.shade600,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -93,7 +96,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty || !value.contains('@')) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        !value.contains('@')) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -132,8 +137,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -155,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       "Don't have an account? ",
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
                     ),
                     TextButton(
                       onPressed: () => context.push('/register'),

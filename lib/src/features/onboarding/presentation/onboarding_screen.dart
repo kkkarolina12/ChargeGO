@@ -32,8 +32,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -66,8 +67,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: _currentPage == index ? 24 : 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey.shade300,
+                              ? colorScheme.primary
+                              : colorScheme.outlineVariant,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -89,8 +90,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -140,24 +141,22 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            data.image,
-            size: 150,
-            color: Theme.of(context).primaryColor,
-          ),
+          Icon(data.image, size: 150, color: colorScheme.primary),
           const SizedBox(height: 40),
           Text(
             data.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -166,7 +165,7 @@ class OnboardingPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey.shade600,
+              color: colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),

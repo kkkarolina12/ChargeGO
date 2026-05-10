@@ -7,6 +7,7 @@ import 'package:chargego/src/features/payment/presentation/add_card_screen.dart'
 import 'package:chargego/src/features/history/presentation/rental_history_screen.dart';
 import 'package:chargego/src/features/profile/presentation/profile_screen.dart';
 import 'package:chargego/src/features/profile/presentation/edit_profile_screen.dart';
+import 'package:chargego/src/features/settings/presentation/settings_screen.dart';
 import 'package:chargego/src/features/support/presentation/support_chat_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:chargego/src/features/onboarding/presentation/onboarding_screen.dart';
@@ -18,7 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Manual provider for now as build_runner is having issues
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  
+
   return GoRouter(
     initialLocation: '/onboarding',
     routes: [
@@ -26,22 +27,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: '/map',
-        builder: (context, state) => const MapScreen(),
-      ),
+      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
       GoRoute(
         path: '/qr-scan',
         builder: (context, state) => const QRScannerScreen(),
@@ -74,13 +66,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
         path: '/support',
         builder: (context, state) => const SupportChatScreen(),
       ),
     ],
     redirect: (context, state) {
       final isLoggedIn = authRepository.currentUser != null;
-      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isLoggingIn =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
       final isOnboarding = state.matchedLocation == '/onboarding';
 
       if (!isLoggedIn) {

@@ -31,7 +31,10 @@ class HomeScreen extends ConsumerWidget {
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/qr-scan'),
               backgroundColor: Theme.of(context).colorScheme.primary,
-              label: const Text('Rent PowerBank', style: TextStyle(color: Colors.white)),
+              label: const Text(
+                'Rent PowerBank',
+                style: TextStyle(color: Colors.white),
+              ),
               icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
             )
           : null,
@@ -49,11 +52,18 @@ class HomeScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.battery_charging_full, color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        Icons.battery_charging_full,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -70,7 +80,10 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ],
                   ),
                 ),
@@ -79,9 +92,9 @@ class HomeScreen extends ConsumerWidget {
             ],
             Text(
               'Hello, ${user?.name ?? 'User'}!',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -131,10 +144,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             const Text(
               'Quick Actions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             GridView.count(
@@ -165,7 +175,9 @@ class HomeScreen extends ConsumerWidget {
                   label: 'Invite friends',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Sharing feature coming soon!')),
+                      const SnackBar(
+                        content: Text('Sharing feature coming soon!'),
+                      ),
                     );
                   },
                 ),
@@ -175,13 +187,9 @@ class HomeScreen extends ConsumerWidget {
                   onTap: () => context.push('/support'),
                 ),
                 _QuickActionItem(
-                  icon: Icons.security,
-                  label: 'Security',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Security settings coming soon!')),
-                    );
-                  },
+                  icon: Icons.settings_outlined,
+                  label: 'Settings',
+                  onTap: () => context.push('/settings'),
                 ),
               ],
             ),
@@ -207,9 +215,7 @@ class _QuickActionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),

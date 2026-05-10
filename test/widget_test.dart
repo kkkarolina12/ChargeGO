@@ -3,8 +3,13 @@ import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:chargego/src/features/auth/domain/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('App starts and shows onboarding', (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(

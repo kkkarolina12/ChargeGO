@@ -31,11 +31,11 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
         setState(() {
           _isScanning = false;
         });
-        
+
         // Handle the code (e.g., station/powerbank ID)
         // For now, we'll just navigate to the rental screen with the code
         // In a real app, you'd validate the code and start the rental process
-        
+
         context.pushReplacement('/active-rental', extra: code);
       }
     }
@@ -46,23 +46,23 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan QR Code'),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: controller, onDetect: _onDetect),
           // Scanner Overlay
           Center(
             child: Container(
               width: 250,
               height: 250,
               decoration: BoxDecoration(
-                border: Border.all(color: Theme.of(context).colorScheme.primary, width: 4),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 4,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -73,7 +73,10 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(24),
