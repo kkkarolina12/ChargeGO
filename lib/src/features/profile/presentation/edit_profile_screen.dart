@@ -32,12 +32,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Future<void> _save() async {
     if (_formKey.currentState!.validate()) {
-      // Mock update
       final authRepo = ref.read(authRepositoryProvider);
       final user = authRepo.currentUser;
       if (user != null) {
-        // We'd typically call a repository method here
-        // For now we just pop
+        await authRepo.updateProfile(
+          userId: user.id,
+          name: _nameController.text,
+          phoneNumber: _phoneController.text,
+        );
         if (mounted) {
           context.pop();
         }
@@ -48,9 +50,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-      ),
+      appBar: AppBar(title: const Text('Edit Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

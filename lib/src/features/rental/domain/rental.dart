@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum RentalStatus { active, completed, cancelled }
 
 class Rental {
@@ -25,17 +27,21 @@ class Rental {
 
   factory Rental.fromJson(Map<String, dynamic> json) {
     return Rental(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      powerBankId: json['powerBankId'] as String,
-      stationIdStart: json['stationIdStart'] as String,
-      stationIdEnd: json['stationIdEnd'] as String?,
-      startTime: DateTime.parse(json['startTime'] as String),
-      endTime: json['endTime'] != null ? DateTime.parse(json['endTime'] as String) : null,
-      totalCost: (json['totalCost'] as num).toDouble(),
-      status: RentalStatus.values.firstWhere(
-        (e) => e.toString() == 'RentalStatus.${json['status']}',
-        orElse: () => RentalStatus.active,
+      id: (json['id'] ?? json['id_alquiler']) as String,
+      userId: (json['userId'] ?? json['id_usuario']) as String,
+      powerBankId: (json['powerBankId'] ?? json['id_bateria']) as String,
+      stationIdStart:
+          (json['stationIdStart'] ?? json['id_estacion_salida']) as String,
+      stationIdEnd:
+          (json['stationIdEnd'] ?? json['id_estacion_devolucion']) as String?,
+      startTime:
+          _readDateTime(json['startTime'] ?? json['fecha_inicio']) ??
+          DateTime.now(),
+      endTime: _readDateTime(json['endTime'] ?? json['fecha_fin']),
+      totalCost: ((json['totalCost'] ?? json['coste_total'] ?? 0) as num)
+          .toDouble(),
+      status: _rentalStatusFromString(
+        (json['status'] ?? json['estado']) as String?,
       ),
     );
   }
@@ -51,6 +57,20 @@ class Rental {
       'endTime': endTime?.toIso8601String(),
       'totalCost': totalCost,
       'status': status.name,
+    };
+  }
+
+  Map<String, dynamic> toFirestoreSchema() {
+    return {
+      'id_alquiler': id,
+      'id_usuario': userId,
+      'id_bateria': powerBankId,
+      'id_estacion_salida': stationIdStart,
+      'id_estacion_devolucion': stationIdEnd,
+      'fecha_inicio': Timestamp.fromDate(startTime),
+      'fecha_fin': endTime == null ? null : Timestamp.fromDate(endTime!),
+      'coste_total': totalCost,
+      'estado': _rentalStatusToString(status),
     };
   }
 
@@ -76,5 +96,41 @@ class Rental {
       totalCost: totalCost ?? this.totalCost,
       status: status ?? this.status,
     );
+  }
+}
+
+DateTime? _readDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  if (value is String) return DateTime.tryParse(value);
+  return null;
+}
+
+RentalStatus _rentalStatusFromString(String? value) {
+  switch (value?.toLowerCase()) {
+    case 'finalizado':
+    case 'completado':
+    case 'completed':
+      return RentalStatus.completed;
+    case 'cancelado':
+    case 'cancelled':
+      return RentalStatus.cancelled;
+    case 'activo':
+    case 'act':
+    case 'active':
+    default:
+      return RentalStatus.active;
+  }
+}
+
+String _rentalStatusToString(RentalStatus status) {
+  switch (status) {
+    case RentalStatus.completed:
+      return 'finalizado';
+    case RentalStatus.cancelled:
+      return 'cancelado';
+    case RentalStatus.active:
+      return 'activo';
   }
 }

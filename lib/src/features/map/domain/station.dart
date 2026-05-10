@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Station {
   final String id;
   final String name;
@@ -18,14 +20,16 @@ class Station {
   });
 
   factory Station.fromJson(Map<String, dynamic> json) {
+    final location = json['ubicacion'];
     return Station(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      address: json['address'] as String,
-      availableCount: json['availableCount'] as int,
-      totalSlots: json['totalSlots'] as int,
+      id: (json['id'] ?? json['id_estacion']) as String,
+      name: (json['name'] ?? json['nombre']) as String,
+      latitude: _readCoordinate(json, location, 'latitude', 'latitud'),
+      longitude: _readCoordinate(json, location, 'longitude', 'longitud'),
+      address: (json['address'] ?? json['direccion'] ?? '') as String,
+      availableCount:
+          (json['availableCount'] ?? json['disponibles'] ?? 0) as int,
+      totalSlots: (json['totalSlots'] ?? json['capacidad_total'] ?? 0) as int,
     );
   }
 
@@ -38,6 +42,17 @@ class Station {
       'address': address,
       'availableCount': availableCount,
       'totalSlots': totalSlots,
+    };
+  }
+
+  Map<String, dynamic> toFirestoreSchema() {
+    return {
+      'id_estacion': id,
+      'nombre': name,
+      'direccion': address,
+      'latitud': latitude,
+      'longitud': longitude,
+      'capacidad_total': totalSlots,
     };
   }
 
@@ -60,4 +75,21 @@ class Station {
       totalSlots: totalSlots ?? this.totalSlots,
     );
   }
+}
+
+double _readCoordinate(
+  Map<String, dynamic> json,
+  dynamic location,
+  String englishKey,
+  String schemaKey,
+) {
+  final value = json[englishKey] ?? json[schemaKey];
+  if (value is num) return value.toDouble();
+
+  if (location is GeoPoint) {
+    if (schemaKey == 'latitud') return location.latitude;
+    if (schemaKey == 'longitud') return location.longitude;
+  }
+
+  return 0;
 }

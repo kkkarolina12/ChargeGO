@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:chargego/src/features/rental/data/rental_repository.dart';
 import 'package:chargego/src/features/rental/domain/rental.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,15 +34,23 @@ class RentalState {
 
 class RentalController extends StateNotifier<RentalState> {
   final RentalRepository _repository;
+  final AuthRepository _authRepository;
   Timer? _timer;
 
-  RentalController(this._repository) : super(RentalState()) {
+  RentalController(this._repository, this._authRepository)
+    : super(RentalState()) {
     _init();
   }
 
   void _init() async {
     state = state.copyWith(isLoading: true);
-    final rental = await _repository.getActiveRental();
+    final user = _authRepository.currentUser;
+    if (user == null) {
+      state = state.copyWith(isLoading: false);
+      return;
+    }
+
+    final rental = await _repository.getActiveRental(user.id);
     if (rental != null) {
       state = state.copyWith(activeRental: rental, isLoading: false);
       _startTimer();
@@ -72,10 +81,15 @@ class RentalController extends StateNotifier<RentalState> {
   Future<void> startNewRental(String powerBankId) async {
     state = state.copyWith(isLoading: true);
     try {
+      final user = _authRepository.currentUser;
+      if (user == null) {
+        throw Exception('No hay un usuario autenticado.');
+      }
+
       final rental = await _repository.startRental(
-        userId: 'user_123', // Mock user
+        userId: user.id,
         powerBankId: powerBankId,
-        stationIdStart: 'station_001', // Mock station
+        stationIdStart: 'station_001',
       );
       state = state.copyWith(activeRental: rental, isLoading: false);
       _startTimer();
@@ -88,7 +102,11 @@ class RentalController extends StateNotifier<RentalState> {
     if (state.activeRental == null) return;
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.endRental(state.activeRental!.id, 'station_002');
+      await _repository.endRental(
+        state.activeRental!.id,
+        'station_002',
+        totalCost: state.estimatedPrice,
+      );
       _timer?.cancel();
       state = RentalState();
     } catch (e) {
@@ -103,7 +121,9 @@ class RentalController extends StateNotifier<RentalState> {
   }
 }
 
-final rentalControllerProvider = StateNotifierProvider<RentalController, RentalState>((ref) {
-  final repository = ref.watch(rentalRepositoryProvider);
-  return RentalController(repository);
-});
+final rentalControllerProvider =
+    StateNotifierProvider<RentalController, RentalState>((ref) {
+      final repository = ref.watch(rentalRepositoryProvider);
+      final authRepository = ref.watch(authRepositoryProvider);
+      return RentalController(repository, authRepository);
+    });

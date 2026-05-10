@@ -14,13 +14,13 @@ class PowerBank {
   });
 
   factory PowerBank.fromJson(Map<String, dynamic> json) {
+    final batteryLevel = json['batteryLevel'] ?? json['porcentaje_carga'] ?? 0;
     return PowerBank(
-      id: json['id'] as String,
-      serialNumber: json['serialNumber'] as String,
-      batteryLevel: (json['batteryLevel'] as num).toDouble(),
-      status: PowerBankStatus.values.firstWhere(
-        (e) => e.toString() == 'PowerBankStatus.${json['status']}',
-        orElse: () => PowerBankStatus.available,
+      id: (json['id'] ?? json['id_bateria']) as String,
+      serialNumber: (json['serialNumber'] ?? json['id_bateria']) as String,
+      batteryLevel: (batteryLevel as num).toDouble(),
+      status: _powerBankStatusFromString(
+        (json['status'] ?? json['estado']) as String?,
       ),
     );
   }
@@ -31,6 +31,15 @@ class PowerBank {
       'serialNumber': serialNumber,
       'batteryLevel': batteryLevel,
       'status': status.name,
+    };
+  }
+
+  Map<String, dynamic> toFirestoreSchema({String? stationId}) {
+    return {
+      'id_bateria': id,
+      if (stationId != null) 'id_estacion': stationId,
+      'porcentaje_carga': batteryLevel,
+      'estado': _powerBankStatusToString(status),
     };
   }
 
@@ -46,5 +55,35 @@ class PowerBank {
       batteryLevel: batteryLevel ?? this.batteryLevel,
       status: status ?? this.status,
     );
+  }
+}
+
+PowerBankStatus _powerBankStatusFromString(String? value) {
+  switch (value?.toLowerCase()) {
+    case 'en_uso':
+    case 'en uso':
+    case 'in_use':
+    case 'inuse':
+      return PowerBankStatus.inUse;
+    case 'cargando':
+    case 'charging':
+      return PowerBankStatus.charging;
+    case 'disponible':
+    case 'activa':
+    case 'activo':
+    case 'available':
+    default:
+      return PowerBankStatus.available;
+  }
+}
+
+String _powerBankStatusToString(PowerBankStatus status) {
+  switch (status) {
+    case PowerBankStatus.inUse:
+      return 'en_uso';
+    case PowerBankStatus.charging:
+      return 'cargando';
+    case PowerBankStatus.available:
+      return 'disponible';
   }
 }

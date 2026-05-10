@@ -1,4 +1,7 @@
+import 'package:chargego/src/core/firebase/firestore_collections.dart';
 import 'package:chargego/src/features/auth/domain/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 abstract class AuthRepository {
@@ -6,46 +9,203 @@ abstract class AuthRepository {
   User? get currentUser;
   Future<User> signInWithEmailAndPassword(String email, String password);
   Future<User> createUserWithEmailAndPassword(String email, String password);
+  Future<void> updateProfile({
+    required String userId,
+    required String name,
+    required String phoneNumber,
+  });
   Future<void> signOut();
 }
 
-class MockAuthRepository implements AuthRepository {
+class FirebaseAuthRepository implements AuthRepository {
+  FirebaseAuthRepository({
+    firebase_auth.FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+  }) : _auth = auth ?? firebase_auth.FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final firebase_auth.FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
   User? _currentUser;
-  
-  @override
-  Stream<User?> authStateChanges() => Stream.value(_currentUser);
+
+  CollectionReference<Map<String, dynamic>> get _users =>
+      _firestore.collection(FirestoreCollections.users);
 
   @override
-  User? get currentUser => _currentUser;
-
-  @override
-  Future<User> signInWithEmailAndPassword(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (password == 'password') {
-      _currentUser = User(id: '1', email: email, name: 'Test User');
-      return _currentUser!;
-    }
-    throw Exception('Invalid password');
+  Stream<User?> authStateChanges() {
+    return _auth.authStateChanges().asyncMap(_mapFirebaseUser);
   }
 
   @override
-  Future<User> createUserWithEmailAndPassword(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = User(id: '1', email: email, name: 'New User');
-    return _currentUser!;
+  User? get currentUser {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      _currentUser = null;
+      return null;
+    }
+
+    if (_currentUser?.id == firebaseUser.uid) {
+      return _currentUser;
+    }
+
+    return User(
+      id: firebaseUser.uid,
+      email: firebaseUser.email ?? '',
+      name: firebaseUser.displayName,
+      phoneNumber: firebaseUser.phoneNumber,
+    );
+  }
+
+  @override
+  Future<User> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      final firebaseUser = credential.user;
+      if (firebaseUser == null) {
+        throw Exception('No se pudo iniciar sesion.');
+      }
+      final user = await _loadOrCreateUser(firebaseUser);
+      if (user.status.toLowerCase() == 'bloqueado') {
+        await signOut();
+        throw Exception('Este usuario esta bloqueado.');
+      }
+      return user;
+    } on firebase_auth.FirebaseAuthException catch (error) {
+      throw Exception(_authMessage(error));
+    }
+  }
+
+  @override
+  Future<User> createUserWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      final firebaseUser = credential.user;
+      if (firebaseUser == null) {
+        throw Exception('No se pudo crear el usuario.');
+      }
+
+      final user = User(
+        id: firebaseUser.uid,
+        email: firebaseUser.email ?? email.trim(),
+        name: _defaultNameFromEmail(email),
+      );
+      await _users.doc(user.id).set({
+        ...user.toFirestoreSchema(),
+        'fecha_registro': FieldValue.serverTimestamp(),
+      });
+      _currentUser = user;
+      return user;
+    } on firebase_auth.FirebaseAuthException catch (error) {
+      throw Exception(_authMessage(error));
+    }
+  }
+
+  @override
+  Future<void> updateProfile({
+    required String userId,
+    required String name,
+    required String phoneNumber,
+  }) async {
+    await _users.doc(userId).set({
+      'id_usuario': userId,
+      'nombre': name.trim(),
+      'telefono': phoneNumber.trim(),
+    }, SetOptions(merge: true));
+
+    if (_auth.currentUser?.uid == userId) {
+      await _auth.currentUser?.updateDisplayName(name.trim());
+    }
+
+    _currentUser = _currentUser?.copyWith(
+      name: name.trim(),
+      phoneNumber: phoneNumber.trim(),
+    );
   }
 
   @override
   Future<void> signOut() async {
     _currentUser = null;
+    await _auth.signOut();
+  }
+
+  Future<User?> _mapFirebaseUser(firebase_auth.User? firebaseUser) async {
+    if (firebaseUser == null) {
+      _currentUser = null;
+      return null;
+    }
+
+    return _loadOrCreateUser(firebaseUser);
+  }
+
+  Future<User> _loadOrCreateUser(firebase_auth.User firebaseUser) async {
+    final userDoc = _users.doc(firebaseUser.uid);
+    final snapshot = await userDoc.get();
+
+    if (snapshot.exists && snapshot.data() != null) {
+      final user = User.fromJson({
+        ...snapshot.data()!,
+        'id_usuario': firebaseUser.uid,
+        'email': snapshot.data()!['email'] ?? firebaseUser.email ?? '',
+      });
+      _currentUser = user;
+      return user;
+    }
+
+    final user = User(
+      id: firebaseUser.uid,
+      email: firebaseUser.email ?? '',
+      name:
+          firebaseUser.displayName ??
+          _defaultNameFromEmail(firebaseUser.email ?? ''),
+      phoneNumber: firebaseUser.phoneNumber,
+    );
+    await userDoc.set({
+      ...user.toFirestoreSchema(),
+      'fecha_registro': FieldValue.serverTimestamp(),
+    });
+    _currentUser = user;
+    return user;
   }
 }
 
-// Manual provider for now
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return MockAuthRepository();
+  return FirebaseAuthRepository();
 });
 
 final authStateChangesProvider = StreamProvider<User?>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges();
 });
+
+String _defaultNameFromEmail(String email) {
+  final value = email.trim();
+  if (!value.contains('@')) return value;
+  return value.split('@').first;
+}
+
+String _authMessage(firebase_auth.FirebaseAuthException error) {
+  switch (error.code) {
+    case 'invalid-email':
+      return 'El email no es valido.';
+    case 'user-disabled':
+      return 'Este usuario esta bloqueado.';
+    case 'user-not-found':
+    case 'wrong-password':
+    case 'invalid-credential':
+      return 'Email o contrasena incorrectos.';
+    case 'email-already-in-use':
+      return 'Ya existe una cuenta con este email.';
+    case 'weak-password':
+      return 'La contrasena es demasiado debil.';
+    default:
+      return error.message ?? 'Error de autenticacion.';
+  }
+}

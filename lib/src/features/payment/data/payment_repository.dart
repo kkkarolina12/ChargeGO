@@ -1,4 +1,6 @@
+import 'package:chargego/src/core/firebase/firestore_collections.dart';
 import 'package:chargego/src/features/payment/domain/payment_method.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 abstract class PaymentRepository {
@@ -8,61 +10,86 @@ abstract class PaymentRepository {
   Future<void> setDefaultPaymentMethod(String userId, String paymentMethodId);
 }
 
-class MockPaymentRepository implements PaymentRepository {
-  final List<PaymentMethod> _mockPaymentMethods = [
-    const PaymentMethod(
-      id: 'pm_1',
-      userId: 'user_1',
-      type: PaymentMethodType.creditCard,
-      last4: '4242',
-      cardBrand: 'Visa',
-      expiryDate: '12/26',
-      isDefault: true,
-    ),
-    const PaymentMethod(
-      id: 'pm_2',
-      userId: 'user_1',
-      type: PaymentMethodType.applePay,
-      isDefault: false,
-    ),
-  ];
+class FirebasePaymentRepository implements PaymentRepository {
+  FirebasePaymentRepository({FirebaseFirestore? firestore})
+    : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _firestore;
+
+  CollectionReference<Map<String, dynamic>> get _paymentMethods =>
+      _firestore.collection(FirestoreCollections.paymentMethods);
 
   @override
   Future<List<PaymentMethod>> getPaymentMethods(String userId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _mockPaymentMethods.where((pm) => pm.userId == userId).toList();
+    if (userId.isEmpty) return [];
+
+    final snapshot = await _paymentMethods
+        .where('id_usuario', isEqualTo: userId)
+        .get();
+    final methods = snapshot.docs
+        .map(
+          (doc) => PaymentMethod.fromJson({
+            ...doc.data(),
+            'id_metodo_pago': doc.data()['id_metodo_pago'] ?? doc.id,
+          }),
+        )
+        .toList();
+    methods.sort((a, b) {
+      if (a.isDefault == b.isDefault) return a.id.compareTo(b.id);
+      return a.isDefault ? -1 : 1;
+    });
+    return methods;
   }
 
   @override
   Future<void> addPaymentMethod(PaymentMethod paymentMethod) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _mockPaymentMethods.add(paymentMethod);
-  }
+    final doc = paymentMethod.id.isEmpty
+        ? _paymentMethods.doc()
+        : _paymentMethods.doc(paymentMethod.id);
 
-  @override
-  Future<void> removePaymentMethod(String paymentMethodId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _mockPaymentMethods.removeWhere((pm) => pm.id == paymentMethodId);
-  }
+    await doc.set({
+      ...paymentMethod.copyWith(id: doc.id).toFirestoreSchema(),
+      'fecha_creacion': FieldValue.serverTimestamp(),
+    });
 
-  @override
-  Future<void> setDefaultPaymentMethod(String userId, String paymentMethodId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    for (var i = 0; i < _mockPaymentMethods.length; i++) {
-      if (_mockPaymentMethods[i].userId == userId) {
-        _mockPaymentMethods[i] = _mockPaymentMethods[i].copyWith(
-          isDefault: _mockPaymentMethods[i].id == paymentMethodId,
-        );
-      }
+    if (paymentMethod.isDefault) {
+      await setDefaultPaymentMethod(paymentMethod.userId, doc.id);
     }
+  }
+
+  @override
+  Future<void> removePaymentMethod(String paymentMethodId) {
+    return _paymentMethods.doc(paymentMethodId).delete();
+  }
+
+  @override
+  Future<void> setDefaultPaymentMethod(
+    String userId,
+    String paymentMethodId,
+  ) async {
+    final snapshot = await _paymentMethods
+        .where('id_usuario', isEqualTo: userId)
+        .get();
+    final batch = _firestore.batch();
+
+    for (final doc in snapshot.docs) {
+      final methodId = (doc.data()['id_metodo_pago'] ?? doc.id) as String;
+      batch.update(doc.reference, {
+        'predeterminado':
+            methodId == paymentMethodId || doc.id == paymentMethodId,
+      });
+    }
+
+    await batch.commit();
   }
 }
 
 final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
-  return MockPaymentRepository();
+  return FirebasePaymentRepository();
 });
 
-final paymentMethodsProvider = FutureProvider.family<List<PaymentMethod>, String>((ref, userId) async {
-  final repository = ref.watch(paymentRepositoryProvider);
-  return repository.getPaymentMethods(userId);
-});
+final paymentMethodsProvider =
+    FutureProvider.family<List<PaymentMethod>, String>((ref, userId) async {
+      final repository = ref.watch(paymentRepositoryProvider);
+      return repository.getPaymentMethods(userId);
+    });

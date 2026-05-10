@@ -37,9 +37,12 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         userId: user.id,
         type: PaymentMethodType.creditCard,
-        last4: _cardNumberController.text.substring(_cardNumberController.text.length - 4),
-        cardBrand: 'Visa', // Hardcoded for mock
+        last4: _cardNumberController.text.substring(
+          _cardNumberController.text.length - 4,
+        ),
+        cardBrand: 'Visa',
         expiryDate: _expiryDateController.text,
+        holderName: _cardHolderController.text,
       );
 
       await ref.read(paymentRepositoryProvider).addPaymentMethod(newCard);
@@ -53,9 +56,7 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Card'),
-      ),
+      appBar: AppBar(title: const Text('Add Card')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -64,7 +65,9 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
             children: [
               TextFormField(
                 controller: _cardHolderController,
-                decoration: const InputDecoration(labelText: 'Card Holder Name'),
+                decoration: const InputDecoration(
+                  labelText: 'Card Holder Name',
+                ),
                 validator: (value) => value!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
@@ -72,7 +75,8 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
                 controller: _cardNumberController,
                 decoration: const InputDecoration(labelText: 'Card Number'),
                 keyboardType: TextInputType.number,
-                validator: (value) => value!.length < 16 ? 'Invalid card number' : null,
+                validator: (value) =>
+                    value!.length < 16 ? 'Invalid card number' : null,
               ),
               const SizedBox(height: 16),
               Row(
@@ -80,7 +84,9 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _expiryDateController,
-                      decoration: const InputDecoration(labelText: 'Expiry Date (MM/YY)'),
+                      decoration: const InputDecoration(
+                        labelText: 'Expiry Date (MM/YY)',
+                      ),
                       validator: (value) => value!.isEmpty ? 'Required' : null,
                     ),
                   ),
@@ -90,7 +96,8 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
                       controller: _cvvController,
                       decoration: const InputDecoration(labelText: 'CVV'),
                       obscureText: true,
-                      validator: (value) => value!.length < 3 ? 'Invalid CVV' : null,
+                      validator: (value) =>
+                          value!.length < 3 ? 'Invalid CVV' : null,
                     ),
                   ),
                 ],
