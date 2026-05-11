@@ -1,8 +1,10 @@
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
+import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:chargego/src/features/rental/presentation/rental_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:chargego/src/features/auth/data/auth_repository.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -12,12 +14,23 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(authRepositoryProvider).currentUser;
     final rentalState = ref.watch(rentalControllerProvider);
 
-    return Scaffold(
+    return PremiumScaffold(
       appBar: AppBar(
-        title: const Text('ChargeGO'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const BrandLogo(size: 34, showShadow: false),
+            const SizedBox(width: 10),
+            Text(
+              'ChargeGO',
+              style: Theme.of(context).appBarTheme.titleTextStyle,
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout_rounded),
             onPressed: () async {
               await ref.read(authRepositoryProvider).signOut();
               if (context.mounted) {
@@ -30,148 +43,211 @@ class HomeScreen extends ConsumerWidget {
       floatingActionButton: rentalState.activeRental == null
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/qr-scan'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
               label: const Text(
                 'Rent PowerBank',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(fontWeight: FontWeight.w900),
               ),
-              icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+              icon: const Icon(Icons.qr_code_scanner_rounded),
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 110),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            BrandHeader(
+              title: 'Hello, ${user?.name ?? 'User'}',
+              subtitle:
+                  'Find a station, scan the QR code, and keep your phone alive all day.',
+              trailing: const BrandLogo(size: 72, showShadow: false),
+            ),
+            const SizedBox(height: 18),
             if (rentalState.activeRental != null) ...[
-              GestureDetector(
+              PremiumCard(
                 onTap: () => context.push('/active-rental'),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.2),
+                gradient: LinearGradient(
+                  colors: [
+                    ChargeGoColors.electric.withValues(alpha: 0.95),
+                    ChargeGoColors.royal,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.battery_charging_full_rounded,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.battery_charging_full,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Active Rental',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Active Rental',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                          Text(
+                            'You have a powerbank in use',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.78),
                             ),
-                            const Text('You have a powerbank in use'),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
             ],
-            Text(
-              'Hello, ${user?.name ?? 'User'}!',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your current balance: \$${user?.balance.toStringAsFixed(2) ?? '0.00'}',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 24),
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: InkWell(
-                onTap: () => context.push('/map'),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      colors: [Colors.blue, Colors.blue.shade300],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            PremiumCard(
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: ChargeGoColors.sky.withValues(alpha: 0.24),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: ChargeGoColors.royal,
                     ),
                   ),
-                  child: const Center(
+                  const SizedBox(width: 14),
+                  Expanded(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.map, color: Colors.white, size: 48),
-                        SizedBox(height: 8),
+                        const Text(
+                          'Current balance',
+                          style: TextStyle(color: ChargeGoColors.muted),
+                        ),
+                        const SizedBox(height: 4),
                         Text(
-                          'Find a Station',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          '\$${user?.balance.toStringAsFixed(2) ?? '0.00'}',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: ChargeGoColors.navy,
+                              ),
                         ),
                       ],
                     ),
                   ),
+                  TextButton(
+                    onPressed: () => context.push('/payment'),
+                    child: const Text('Manage'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            PremiumCard(
+              onTap: () => context.push('/map'),
+              padding: const EdgeInsets.all(0),
+              child: Container(
+                height: 156,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [ChargeGoColors.navy, ChargeGoColors.royal],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Find a Station',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Explore nearby ChargeGO points and live availability.',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.78),
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.map_rounded,
+                        color: Colors.white,
+                        size: 34,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Quick Actions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+            const SectionTitle('Quick Actions'),
+            const SizedBox(height: 14),
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1.2,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 1.06,
               children: [
-                _QuickActionItem(
-                  icon: Icons.person,
+                PremiumIconTile(
+                  icon: Icons.person_rounded,
                   label: 'My profile',
                   onTap: () => context.push('/profile'),
                 ),
-                _QuickActionItem(
-                  icon: Icons.history,
+                PremiumIconTile(
+                  icon: Icons.history_rounded,
                   label: 'History',
                   onTap: () => context.push('/history'),
                 ),
-                _QuickActionItem(
-                  icon: Icons.payment,
+                PremiumIconTile(
+                  icon: Icons.payment_rounded,
                   label: 'Payment methods',
                   onTap: () => context.push('/payment'),
                 ),
-                _QuickActionItem(
-                  icon: Icons.share,
+                PremiumIconTile(
+                  icon: Icons.share_rounded,
                   label: 'Invite friends',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -181,53 +257,17 @@ class HomeScreen extends ConsumerWidget {
                     );
                   },
                 ),
-                _QuickActionItem(
-                  icon: Icons.help_outline,
+                PremiumIconTile(
+                  icon: Icons.help_outline_rounded,
                   label: 'Help/support',
                   onTap: () => context.push('/support'),
                 ),
-                _QuickActionItem(
+                PremiumIconTile(
                   icon: Icons.settings_outlined,
                   label: 'Settings',
                   onTap: () => context.push('/settings'),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickActionItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:flutter/material.dart';
 
 class SupportChatScreen extends StatefulWidget {
@@ -19,13 +21,13 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         _messages.add({'text': _messageController.text, 'isUser': true});
         _messageController.clear();
       });
-      // Mock response
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           setState(() {
             _messages.add({
-              'text': 'Thank you for your message. An agent will be with you shortly.',
-              'isUser': false
+              'text':
+                  'Thank you for your message. An agent will be with you shortly.',
+              'isUser': false,
             });
           });
         }
@@ -35,27 +37,26 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Support Chat'),
-      ),
+    return PremiumScaffold(
+      appBar: AppBar(title: const Text('Support Chat')),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
                 return _ChatBubble(
-                  text: msg['text'],
-                  isUser: msg['isUser'],
+                  text: msg['text'] as String,
+                  isUser: msg['isUser'] as bool,
                 );
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          PremiumCard(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
                 Expanded(
@@ -63,12 +64,15 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     controller: _messageController,
                     decoration: const InputDecoration(
                       hintText: 'Type a message...',
-                      border: OutlineInputBorder(),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
+                IconButton.filled(
+                  icon: const Icon(Icons.send_rounded),
                   onPressed: _sendMessage,
                 ),
               ],
@@ -81,29 +85,45 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 }
 
 class _ChatBubble extends StatelessWidget {
+  const _ChatBubble({required this.text, required this.isUser});
+
   final String text;
   final bool isUser;
-
-  const _ChatBubble({required this.text, required this.isUser});
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
-          color: isUser ? Theme.of(context).primaryColor : Colors.grey[300],
-          borderRadius: BorderRadius.circular(12).copyWith(
-            bottomRight: isUser ? Radius.zero : null,
-            bottomLeft: !isUser ? Radius.zero : null,
+          gradient: isUser
+              ? const LinearGradient(
+                  colors: [ChargeGoColors.royal, ChargeGoColors.electric],
+                )
+              : null,
+          color: isUser ? null : Colors.white,
+          borderRadius: BorderRadius.circular(18).copyWith(
+            bottomRight: isUser ? const Radius.circular(4) : null,
+            bottomLeft: !isUser ? const Radius.circular(4) : null,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: ChargeGoColors.navy.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: isUser ? Colors.white : Colors.black,
+            color: isUser ? Colors.white : ChargeGoColors.graphite,
+            height: 1.35,
           ),
         ),
       ),

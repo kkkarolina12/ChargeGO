@@ -1,3 +1,5 @@
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:chargego/src/features/payment/data/payment_repository.dart';
 import 'package:chargego/src/features/payment/domain/payment_method.dart';
@@ -18,32 +20,84 @@ class SavedCardsScreen extends ConsumerWidget {
     final hasActiveRental =
         ref.watch(rentalControllerProvider).activeRental != null;
 
-    return Scaffold(
+    return PremiumScaffold(
       appBar: AppBar(title: const Text('Saved Cards')),
       body: paymentMethodsAsync.when(
         data: (methods) => methods.isEmpty
-            ? const Center(child: Text('No saved cards'))
-            : ListView.builder(
+            ? const EmptyState(
+                icon: Icons.credit_card_off_rounded,
+                title: 'No saved cards',
+                subtitle: 'Add a card to rent power banks faster.',
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
                 itemCount: methods.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 14),
                 itemBuilder: (context, index) {
                   final method = methods[index];
-                  return ListTile(
-                    leading: Icon(
-                      method.type == PaymentMethodType.creditCard
-                          ? Icons.credit_card
-                          : Icons.account_balance_wallet,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    title: Text(_paymentMethodTitle(method)),
-                    subtitle: Text(_paymentMethodSubtitle(method)),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  return PremiumCard(
+                    child: Row(
                       children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                ChargeGoColors.royal,
+                                ChargeGoColors.electric,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Icon(
+                            method.type == PaymentMethodType.creditCard
+                                ? Icons.credit_card_rounded
+                                : Icons.account_balance_wallet_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              if (!method.isDefault && user != null) {
+                                ref
+                                    .read(paymentRepositoryProvider)
+                                    .setDefaultPaymentMethod(
+                                      user.id,
+                                      method.id,
+                                    );
+                                ref.invalidate(paymentMethodsProvider(user.id));
+                              }
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _paymentMethodTitle(method),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w900),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _paymentMethodSubtitle(method),
+                                  style: const TextStyle(
+                                    color: ChargeGoColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         if (method.isDefault)
-                          const Icon(Icons.check_circle, color: Colors.green),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: ChargeGoColors.success,
+                          ),
                         IconButton(
                           tooltip: 'Eliminar tarjeta',
-                          icon: const Icon(Icons.delete_outline),
+                          icon: const Icon(Icons.delete_outline_rounded),
                           onPressed: user == null
                               ? null
                               : () => _removePaymentMethod(
@@ -56,23 +110,16 @@ class SavedCardsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    onTap: () {
-                      if (!method.isDefault && user != null) {
-                        ref
-                            .read(paymentRepositoryProvider)
-                            .setDefaultPaymentMethod(user.id, method.id);
-                        ref.invalidate(paymentMethodsProvider(user.id));
-                      }
-                    },
                   );
                 },
               ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/add-card'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add_card_rounded),
+        label: const Text('Add Card'),
       ),
     );
   }

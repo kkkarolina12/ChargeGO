@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/map/data/map_repository.dart';
 import 'package:chargego/src/features/map/domain/station.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -13,18 +15,15 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  final LatLng _initialPosition = const LatLng(51.5074, -0.1278); // London
+  final LatLng _initialPosition = const LatLng(51.5074, -0.1278);
 
-  void _onMapCreated(GoogleMapController controller) {
-    // Controller can be used here for future enhancements
-  }
+  void _onMapCreated(GoogleMapController controller) {}
 
   void _showStationDetails(Station station) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         return StationDetailsSheet(station: station);
       },
@@ -39,7 +38,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       appBar: AppBar(
         title: const Text('Find a Station'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
       ),
@@ -57,15 +56,42 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             );
           }).toSet();
 
-          return GoogleMap(
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: CameraPosition(
-              target: _initialPosition,
-              zoom: 13,
-            ),
-            markers: markers,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
+          return Stack(
+            children: [
+              GoogleMap(
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                  target: _initialPosition,
+                  zoom: 13,
+                ),
+                markers: markers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+              ),
+              Positioned(
+                top: 16,
+                left: 16,
+                right: 16,
+                child: PremiumCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.near_me_rounded,
+                        color: ChargeGoColors.royal,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          '${stations.length} ChargeGO stations nearby',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -76,133 +102,151 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 }
 
 class StationDetailsSheet extends StatelessWidget {
-  final Station station;
-
   const StationDetailsSheet({super.key, required this.station});
+
+  final Station station;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      station.name,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      station.address,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    final available = station.availableCount > 0;
+
+    return Padding(
+      padding: const EdgeInsets.all(14),
+      child: PremiumCard(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: station.availableCount > 0 ? Colors.green.shade100 : Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(12),
+                  color: ChargeGoColors.sky.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(
-                  station.availableCount > 0 ? 'Available' : 'Empty',
-                  style: TextStyle(
-                    color: station.availableCount > 0 ? Colors.green.shade700 : Colors.red.shade700,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _InfoItem(
-                icon: Icons.battery_charging_full,
-                label: 'Available',
-                value: station.availableCount.toString(),
-              ),
-              _InfoItem(
-                icon: Icons.power,
-                label: 'Total Slots',
-                value: station.totalSlots.toString(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: station.availableCount > 0
-                  ? () {
-                      context.pop();
-                      context.push('/qr-scan');
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Unlock Powerbank',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        station.name,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        station.address,
+                        style: const TextStyle(color: ChargeGoColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        (available
+                                ? ChargeGoColors.success
+                                : ChargeGoColors.danger)
+                            .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    available ? 'Available' : 'Empty',
+                    style: TextStyle(
+                      color: available
+                          ? ChargeGoColors.success
+                          : ChargeGoColors.danger,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.battery_charging_full_rounded,
+                    label: 'Available',
+                    value: station.availableCount.toString(),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.power_rounded,
+                    label: 'Total Slots',
+                    value: station.totalSlots.toString(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: GradientButton(
+                label: 'Unlock Powerbank',
+                icon: Icons.lock_open_rounded,
+                onPressed: available
+                    ? () {
+                        context.pop();
+                        context.push('/qr-scan');
+                      }
+                    : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _InfoItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
   const _InfoItem({
     required this.icon,
     required this.label,
     required this.value,
   });
 
+  final IconData icon;
+  final String label;
+  final String value;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ChargeGoColors.frost.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: ChargeGoColors.royal, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
+          Text(
+            label,
+            style: const TextStyle(color: ChargeGoColors.muted, fontSize: 12),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

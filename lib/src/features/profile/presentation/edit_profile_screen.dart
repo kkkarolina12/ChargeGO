@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +67,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'La imagen es demasiado grande. Elige otra más pequeña.',
+            'La imagen es demasiado grande. Elige otra mas pequena.',
           ),
         ),
       );
@@ -142,59 +144,77 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final imageProvider = _avatarImageProvider();
 
-    return Scaffold(
+    return PremiumScaffold(
       appBar: AppBar(title: const Text('Editar perfil')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 55,
-                  backgroundImage: imageProvider,
-                  child: imageProvider == null
-                      ? const Icon(Icons.person, size: 55)
-                      : null,
+              BrandHeader(
+                title: 'Edit profile',
+                subtitle:
+                    'Keep your ChargeGO identity polished and up to date.',
+                compact: true,
+                trailing: GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 34,
+                    backgroundColor: Colors.white.withValues(alpha: 0.18),
+                    backgroundImage: imageProvider,
+                    child: imageProvider == null
+                        ? const Icon(
+                            Icons.add_a_photo_rounded,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text('Pulsa para cambiar foto'),
-              const SizedBox(height: 30),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
+              const SizedBox(height: 18),
+              PremiumCard(
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Introduce un nombre';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 18),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Telefono (opcional)',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                    ),
+                  ],
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Introduce un nombre';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Teléfono (opcional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
+                child: GradientButton(
+                  label: 'Guardar cambios',
+                  icon: Icons.save_rounded,
                   onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const CircularProgressIndicator()
-                      : const Text('Guardar cambios'),
+                  isLoading: _saving,
                 ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Pulsa la foto para cambiar avatar',
+                style: TextStyle(color: ChargeGoColors.muted),
               ),
             ],
           ),

@@ -1,3 +1,5 @@
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:chargego/src/features/history/data/history_repository.dart';
 import 'package:flutter/material.dart';
@@ -12,35 +14,79 @@ class RentalHistoryScreen extends ConsumerWidget {
     final user = ref.watch(authRepositoryProvider).currentUser;
     final historyAsync = ref.watch(rentalHistoryProvider(user?.id ?? ''));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rental History'),
-      ),
+    return PremiumScaffold(
+      appBar: AppBar(title: const Text('Rental History')),
       body: historyAsync.when(
         data: (rentals) => rentals.isEmpty
-            ? const Center(child: Text('No history found'))
-            : ListView.builder(
+            ? const EmptyState(
+                icon: Icons.history_rounded,
+                title: 'No history found',
+                subtitle: 'Your completed rentals will appear here.',
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
                 itemCount: rentals.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 14),
                 itemBuilder: (context, index) {
                   final rental = rentals[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      title: Text('Rental #${rental.id}'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Date: ${DateFormat('MMM dd, yyyy HH:mm').format(rental.startTime)}'),
-                          Text('Duration: ${rental.endTime?.difference(rental.startTime).inMinutes ?? 0} mins'),
-                        ],
-                      ),
-                      trailing: Text(
-                        '\$${rental.totalCost.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      onTap: () {
-                        // Navigate to rental details if needed
-                      },
+                  final minutes =
+                      rental.endTime?.difference(rental.startTime).inMinutes ??
+                      0;
+                  return PremiumCard(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: ChargeGoColors.sky.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Icon(
+                            Icons.battery_charging_full_rounded,
+                            color: ChargeGoColors.royal,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Rental #${rental.id}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                DateFormat(
+                                  'MMM dd, yyyy HH:mm',
+                                ).format(rental.startTime),
+                                style: const TextStyle(
+                                  color: ChargeGoColors.muted,
+                                ),
+                              ),
+                              Text(
+                                '$minutes mins',
+                                style: const TextStyle(
+                                  color: ChargeGoColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '\$${rental.totalCost.toStringAsFixed(2)}',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: ChargeGoColors.royal,
+                              ),
+                        ),
+                      ],
                     ),
                   );
                 },

@@ -1,3 +1,4 @@
+import 'package:chargego/src/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
@@ -44,12 +45,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scan QR Code'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Scan QR Code')),
       body: Stack(
         children: [
           MobileScanner(controller: controller, onDetect: _onDetect),
@@ -59,11 +55,15 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
               width: 250,
               height: 250,
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 4,
-                ),
-                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: ChargeGoColors.electric, width: 5),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: ChargeGoColors.electric.withValues(alpha: 0.28),
+                    blurRadius: 26,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
             ),
           ),
@@ -78,8 +78,17 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  gradient: const LinearGradient(
+                    colors: [ChargeGoColors.navy, ChargeGoColors.royal],
+                  ),
                   borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 18,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: const Text(
                   'Point your camera at the QR code',

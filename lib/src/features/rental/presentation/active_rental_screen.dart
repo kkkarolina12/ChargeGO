@@ -1,3 +1,5 @@
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/rental/presentation/rental_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,8 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ActiveRentalScreen extends ConsumerStatefulWidget {
-  final String? powerBankId;
   const ActiveRentalScreen({super.key, this.powerBankId});
+
+  final String? powerBankId;
 
   @override
   ConsumerState<ActiveRentalScreen> createState() => _ActiveRentalScreenState();
@@ -17,7 +20,6 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
   void initState() {
     super.initState();
     if (widget.powerBankId != null) {
-      // Start rental if powerBankId is provided (from QR scan)
       Future.microtask(() {
         ref
             .read(rentalControllerProvider.notifier)
@@ -27,10 +29,10 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
   }
 
   String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return '${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds';
   }
 
   @override
@@ -38,45 +40,46 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     final state = ref.watch(rentalControllerProvider);
     final rental = state.activeRental;
 
-    return Scaffold(
+    return PremiumScaffold(
       appBar: AppBar(
         title: const Text('Active Rental'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close_rounded),
           onPressed: () => context.go('/home'),
         ),
       ),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : rental == null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('No active rental found'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.go('/home'),
-                    child: const Text('Go Home'),
-                  ),
-                ],
-              ),
+          ? const EmptyState(
+              icon: Icons.battery_unknown_rounded,
+              title: 'No active rental found',
+              subtitle: 'Start a new rental from the home screen.',
             )
           : Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(rental),
-                  const SizedBox(height: 32),
+                  const BrandHeader(
+                    title: 'Enjoy your ChargeGO',
+                    subtitle:
+                        'Your rental is active. Return the powerbank when you are done.',
+                    compact: true,
+                    trailing: Icon(
+                      Icons.battery_charging_full_rounded,
+                      color: Colors.white,
+                      size: 42,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   _buildTimerCard(state.elapsed, state.estimatedPrice),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 18),
                   _buildDetailsCard(rental),
                   const Spacer(),
-                  ElevatedButton(
+                  GradientButton(
+                    label: 'RETURN POWERBANK',
+                    icon: Icons.assignment_return_rounded,
                     onPressed: () async {
                       await ref
                           .read(rentalControllerProvider.notifier)
@@ -90,21 +93,6 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
                       );
                       context.go('/home');
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'RETURN POWERBANK',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -112,139 +100,53 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     );
   }
 
-  Widget _buildHeader(rental) {
-    return Column(
-      children: [
-        Icon(
-          Icons.battery_charging_full,
-          size: 64,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Enjoy your ChargeGO!',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildTimerCard(Duration elapsed, double price) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        ),
+    return PremiumCard(
+      gradient: LinearGradient(
+        colors: [Colors.white, ChargeGoColors.frost.withValues(alpha: 0.92)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
       child: Column(
         children: [
           const Text(
             'ELAPSED TIME',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               letterSpacing: 1.2,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w800,
+              color: ChargeGoColors.muted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             _formatDuration(elapsed),
-            style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
+            style: const TextStyle(
+              fontSize: 46,
+              fontWeight: FontWeight.w900,
+              color: ChargeGoColors.navy,
             ),
           ),
-          const Divider(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Estimated Price:', style: TextStyle(fontSize: 16)),
-              Text(
-                '\$${price.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailsCard(rental) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildDetailRow(
-              Icons.location_on_outlined,
-              'Pick-up Station',
-              'Main Square Station (Mock)',
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ChargeGoColors.sky.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(18),
             ),
-            const Divider(),
-            _buildDetailRow(
-              Icons.vibration,
-              'PowerBank ID',
-              rental.powerBankId,
-            ),
-            const Divider(),
-            _buildDetailRow(
-              Icons.access_time,
-              'Start Time',
-              DateFormat('HH:mm, MMM d').format(rental.startTime),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                const Text(
+                  'Estimated Price',
+                  style: TextStyle(fontWeight: FontWeight.w800),
                 ),
                 Text(
-                  value,
+                  '\$${price.toStringAsFixed(2)}',
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: ChargeGoColors.royal,
                   ),
                 ),
               ],
@@ -252,6 +154,66 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailsCard(rental) {
+    return PremiumCard(
+      child: Column(
+        children: [
+          _buildDetailRow(
+            Icons.location_on_outlined,
+            'Pick-up Station',
+            'Main Square Station (Mock)',
+          ),
+          const Divider(height: 24),
+          _buildDetailRow(Icons.vibration, 'PowerBank ID', rental.powerBankId),
+          const Divider(height: 24),
+          _buildDetailRow(
+            Icons.access_time_rounded,
+            'Start Time',
+            DateFormat('HH:mm, MMM d').format(rental.startTime),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: ChargeGoColors.sky.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Icon(icon, size: 21, color: ChargeGoColors.royal),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: ChargeGoColors.muted,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

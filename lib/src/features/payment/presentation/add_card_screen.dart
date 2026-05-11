@@ -1,4 +1,6 @@
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
+import 'package:chargego/src/core/theme/app_theme.dart';
+import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/payment/data/payment_repository.dart';
 import 'package:chargego/src/features/payment/domain/payment_method.dart';
 import 'package:flutter/material.dart';
@@ -56,79 +58,132 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PremiumScaffold(
       appBar: AppBar(title: const Text('Anadir tarjeta')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _cardHolderController,
-                decoration: const InputDecoration(
-                  labelText: 'Titular de la tarjeta',
-                ),
-                textCapitalization: TextCapitalization.words,
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _cardNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Numero de tarjeta',
-                  counterText: '',
-                ),
-                keyboardType: TextInputType.number,
-                maxLength: 16,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(16),
-                ],
-                validator: _validateCardNumber,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _expiryDateController,
-                      decoration: const InputDecoration(
-                        labelText: 'Fecha (MM/AA)',
-                        hintText: 'MM/AA',
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                        const ExpiryDateInputFormatter(),
-                      ],
-                      validator: _validateExpiryDate,
-                    ),
+              BrandHeader(
+                title: 'Secure card',
+                subtitle:
+                    'Your details stay protected and ready for fast rentals.',
+                compact: true,
+                trailing: Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _cvvController,
-                      decoration: const InputDecoration(labelText: 'CVV'),
-                      keyboardType: TextInputType.number,
-                      obscureText: true,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(3),
-                      ],
-                      validator: (value) => value == null || value.length != 3
-                          ? 'Invalid CVV'
+                  child: const Icon(
+                    Icons.credit_card_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              PremiumCard(
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _cardHolderController,
+                      decoration: const InputDecoration(
+                        labelText: 'Titular de la tarjeta',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      textCapitalization: TextCapitalization.words,
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Required'
                           : null,
                     ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _cardNumberController,
+                      decoration: const InputDecoration(
+                        labelText: 'Numero de tarjeta',
+                        counterText: '',
+                        prefixIcon: Icon(Icons.credit_card_rounded),
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 16,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(16),
+                      ],
+                      validator: _validateCardNumber,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _expiryDateController,
+                            decoration: const InputDecoration(
+                              labelText: 'Fecha (MM/AA)',
+                              hintText: 'MM/AA',
+                              prefixIcon: Icon(Icons.event_rounded),
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(4),
+                              const ExpiryDateInputFormatter(),
+                            ],
+                            validator: _validateExpiryDate,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _cvvController,
+                            decoration: const InputDecoration(
+                              labelText: 'CVV',
+                              prefixIcon: Icon(Icons.lock_outline_rounded),
+                            ),
+                            keyboardType: TextInputType.number,
+                            obscureText: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(3),
+                            ],
+                            validator: (value) =>
+                                value == null || value.length != 3
+                                ? 'Invalid CVV'
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              GradientButton(
+                label: 'Guardar tarjeta',
+                icon: Icons.verified_rounded,
+                onPressed: _submit,
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 18,
+                    color: ChargeGoColors.royal.withValues(alpha: 0.75),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Protected payment details',
+                    style: TextStyle(color: ChargeGoColors.muted),
                   ),
                 ],
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Guardar tarjeta'),
               ),
             ],
           ),
