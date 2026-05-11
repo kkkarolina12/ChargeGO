@@ -120,50 +120,6 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 18),
             ],
             PremiumCard(
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: ChargeGoColors.sky.withValues(alpha: 0.24),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      color: ChargeGoColors.royal,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Saldo actual',
-                          style: TextStyle(color: premiumMutedColor(context)),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '\$${user?.balance.toStringAsFixed(2) ?? '0.00'}',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: premiumTextColor(context),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => context.push('/payment'),
-                    child: const Text('Gestionar'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            PremiumCard(
               onTap: () => context.push('/map'),
               padding: const EdgeInsets.all(0),
               child: Container(
