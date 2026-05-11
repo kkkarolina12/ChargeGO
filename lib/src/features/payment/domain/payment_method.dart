@@ -8,6 +8,7 @@ class PaymentMethod {
   final String? cardBrand;
   final String? expiryDate;
   final String? holderName;
+  final String? displayName;
   final bool isDefault;
 
   const PaymentMethod({
@@ -18,6 +19,7 @@ class PaymentMethod {
     this.cardBrand,
     this.expiryDate,
     this.holderName,
+    this.displayName,
     this.isDefault = false,
   });
 
@@ -32,6 +34,7 @@ class PaymentMethod {
       cardBrand: (json['cardBrand'] ?? json['marca_tarjeta']) as String?,
       expiryDate: (json['expiryDate'] ?? json['fecha_expiracion']) as String?,
       holderName: (json['holderName'] ?? json['titular']) as String?,
+      displayName: (json['displayName'] ?? json['nombre_tarjeta']) as String?,
       isDefault: (json['isDefault'] ?? json['predeterminado'] ?? false) as bool,
     );
   }
@@ -44,6 +47,7 @@ class PaymentMethod {
       'token_pago': null,
       'ultimos_4': last4,
       'titular': holderName,
+      'nombre_tarjeta': displayName,
       'predeterminado': isDefault,
       'fecha_expiracion': expiryDate,
     };
@@ -57,6 +61,7 @@ class PaymentMethod {
     String? cardBrand,
     String? expiryDate,
     String? holderName,
+    String? displayName,
     bool? isDefault,
   }) {
     return PaymentMethod(
@@ -67,6 +72,7 @@ class PaymentMethod {
       cardBrand: cardBrand ?? this.cardBrand,
       expiryDate: expiryDate ?? this.expiryDate,
       holderName: holderName ?? this.holderName,
+      displayName: displayName ?? this.displayName,
       isDefault: isDefault ?? this.isDefault,
     );
   }

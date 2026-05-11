@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -65,7 +64,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La imagen es demasiado grande. Elige otra más pequeña.'),
+          content: Text(
+            'La imagen es demasiado grande. Elige otra más pequeña.',
+          ),
         ),
       );
       return;
@@ -100,19 +101,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = authRepo.currentUser;
 
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay usuario conectado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No hay usuario conectado')));
       return;
     }
 
     setState(() => _saving = true);
 
     try {
-      await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(user.id)
-          .set({
+      await FirebaseFirestore.instance.collection('usuarios').doc(user.id).set({
         'id_usuario': user.id,
         'nombre': _nameController.text.trim(),
         'telefono': _phoneController.text.trim(),
@@ -122,17 +120,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil actualizado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
 
       context.pop(true);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al guardar perfil: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al guardar perfil: $e')));
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -145,9 +143,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final imageProvider = _avatarImageProvider();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Editar perfil'),
-      ),
+      appBar: AppBar(title: const Text('Editar perfil')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(

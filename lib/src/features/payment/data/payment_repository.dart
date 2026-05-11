@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 abstract class PaymentRepository {
   Future<List<PaymentMethod>> getPaymentMethods(String userId);
   Future<void> addPaymentMethod(PaymentMethod paymentMethod);
-  Future<void> removePaymentMethod(String paymentMethodId);
+  Future<void> removePaymentMethod(String userId, String paymentMethodId);
   Future<void> setDefaultPaymentMethod(String userId, String paymentMethodId);
 }
 
@@ -18,6 +18,9 @@ class FirebasePaymentRepository implements PaymentRepository {
 
   CollectionReference<Map<String, dynamic>> get _paymentMethods =>
       _firestore.collection(FirestoreCollections.paymentMethods);
+
+  CollectionReference<Map<String, dynamic>> get _rentals =>
+      _firestore.collection(FirestoreCollections.rentals);
 
   @override
   Future<List<PaymentMethod>> getPaymentMethods(String userId) async {
@@ -58,7 +61,22 @@ class FirebasePaymentRepository implements PaymentRepository {
   }
 
   @override
-  Future<void> removePaymentMethod(String paymentMethodId) {
+  Future<void> removePaymentMethod(
+    String userId,
+    String paymentMethodId,
+  ) async {
+    final activeRental = await _rentals
+        .where('id_usuario', isEqualTo: userId)
+        .where('estado', isEqualTo: 'activo')
+        .limit(1)
+        .get();
+
+    if (activeRental.docs.isNotEmpty) {
+      throw Exception(
+        'No puedes eliminar una tarjeta mientras tienes una bateria alquilada.',
+      );
+    }
+
     return _paymentMethods.doc(paymentMethodId).delete();
   }
 
