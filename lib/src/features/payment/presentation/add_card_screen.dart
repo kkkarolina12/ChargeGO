@@ -68,9 +68,9 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BrandHeader(
-                title: 'Secure card',
+                title: 'Tarjeta segura',
                 subtitle:
-                    'Your details stay protected and ready for fast rentals.',
+                    'Tus datos quedan protegidos y listos para alquileres rapidos.',
                 compact: true,
                 trailing: Container(
                   width: 58,
@@ -99,7 +99,7 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
                       textCapitalization: TextCapitalization.words,
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                          ? 'Required'
+                          ? 'Obligatorio'
                           : null,
                     ),
                     const SizedBox(height: 16),
@@ -154,7 +154,7 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
                             ],
                             validator: (value) =>
                                 value == null || value.length != 3
-                                ? 'Invalid CVV'
+                                ? 'CVV incorrecto'
                                 : null,
                           ),
                         ),
@@ -179,9 +179,9 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
                     color: ChargeGoColors.royal.withValues(alpha: 0.75),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Protected payment details',
-                    style: TextStyle(color: ChargeGoColors.muted),
+                  Text(
+                    'Datos de pago protegidos',
+                    style: TextStyle(color: premiumMutedColor(context)),
                   ),
                 ],
               ),

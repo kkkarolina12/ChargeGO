@@ -13,12 +13,29 @@ class QRScannerScreen extends ConsumerStatefulWidget {
 
 class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   final MobileScannerController controller = MobileScannerController();
+  final TextEditingController _manualCodeController = TextEditingController();
   bool _isScanning = true;
 
   @override
   void dispose() {
     controller.dispose();
+    _manualCodeController.dispose();
     super.dispose();
+  }
+
+  void _submitManualCode() {
+    final code = _manualCodeController.text.trim();
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Introduce el codigo de la estacion.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isScanning = false;
+    });
+    context.pushReplacement('/active-rental', extra: code);
   }
 
   void _onDetect(BarcodeCapture capture) {
@@ -28,14 +45,10 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     if (barcodes.isNotEmpty) {
       final String? code = barcodes.first.rawValue;
       if (code != null) {
-        debugPrint('Barcode found! $code');
+        debugPrint('Codigo encontrado: $code');
         setState(() {
           _isScanning = false;
         });
-
-        // Handle the code (e.g., station/powerbank ID)
-        // For now, we'll just navigate to the rental screen with the code
-        // In a real app, you'd validate the code and start the rental process
 
         context.pushReplacement('/active-rental', extra: code);
       }
@@ -45,7 +58,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR Code')),
+      appBar: AppBar(title: const Text('Escanear codigo QR')),
       body: Stack(
         children: [
           MobileScanner(controller: controller, onDetect: _onDetect),
@@ -91,9 +104,50 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
                   ],
                 ),
                 child: const Text(
-                  'Point your camera at the QR code',
+                  'Apunta la camara al codigo QR',
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 150,
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 22,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _manualCodeController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'Codigo manual',
+                        hintText: 'Codigo de estacion',
+                        prefixIcon: Icon(Icons.pin_outlined),
+                      ),
+                      onSubmitted: (_) => _submitManualCode(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton.filled(
+                    tooltip: 'Introducir codigo',
+                    onPressed: _submitManualCode,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                  ),
+                ],
               ),
             ),
           ),

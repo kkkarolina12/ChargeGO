@@ -174,12 +174,21 @@ class AppTheme {
     return base.copyWith(
       scaffoldBackgroundColor: const Color(0xFF07111F),
       cardColor: const Color(0xFF111A28),
+      textTheme: base.textTheme.apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
         scrolledUnderElevation: 0,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 19,
+          fontWeight: FontWeight.w800,
+        ),
       ),
       cardTheme: CardThemeData(
         color: const Color(0xFF111A28),
@@ -194,6 +203,9 @@ class AppTheme {
           horizontal: 18,
           vertical: 17,
         ),
+        prefixIconColor: ChargeGoColors.sky,
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.68)),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.48)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
@@ -218,7 +230,41 @@ class AppTheme {
         backgroundColor: _darkBrandBlue,
         foregroundColor: Color(0xFF07111F),
       ),
-      listTileTheme: const ListTileThemeData(iconColor: _darkBrandBlue),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: ChargeGoColors.sky,
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: _darkBrandBlue,
+        textColor: Colors.white,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF15233A),
+        contentTextStyle: const TextStyle(color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return ChargeGoColors.sky;
+            }
+            return const Color(0xFF101B2B);
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const Color(0xFF07111F);
+            }
+            return Colors.white;
+          }),
+          side: WidgetStateProperty.all(
+            BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+        ),
+      ),
     );
   }
 }

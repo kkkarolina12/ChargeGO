@@ -21,13 +21,13 @@ class SavedCardsScreen extends ConsumerWidget {
         ref.watch(rentalControllerProvider).activeRental != null;
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('Saved Cards')),
+      appBar: AppBar(title: const Text('Tarjetas guardadas')),
       body: paymentMethodsAsync.when(
         data: (methods) => methods.isEmpty
             ? const EmptyState(
                 icon: Icons.credit_card_off_rounded,
-                title: 'No saved cards',
-                subtitle: 'Add a card to rent power banks faster.',
+                title: 'No hay tarjetas guardadas',
+                subtitle: 'Anade una tarjeta para alquilar mas rapido.',
               )
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
@@ -82,8 +82,8 @@ class SavedCardsScreen extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   _paymentMethodSubtitle(method),
-                                  style: const TextStyle(
-                                    color: ChargeGoColors.muted,
+                                  style: TextStyle(
+                                    color: premiumMutedColor(context),
                                   ),
                                 ),
                               ],
@@ -119,7 +119,7 @@ class SavedCardsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/add-card'),
         icon: const Icon(Icons.add_card_rounded),
-        label: const Text('Add Card'),
+        label: const Text('Anadir tarjeta'),
       ),
     );
   }
@@ -146,8 +146,8 @@ String _paymentMethodTitle(PaymentMethod method) {
 String _paymentMethodSubtitle(PaymentMethod method) {
   if (method.type != PaymentMethodType.creditCard) {
     return method.isDefault
-        ? 'Predeterminado'
-        : 'Toca para marcar como predeterminado';
+        ? 'Predeterminada'
+        : 'Toca para marcar como predeterminada';
   }
 
   final cardDescription =

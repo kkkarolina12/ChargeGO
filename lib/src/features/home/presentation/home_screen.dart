@@ -29,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            tooltip: 'Logout',
+            tooltip: 'Cerrar sesion',
             icon: const Icon(Icons.logout_rounded),
             onPressed: () async {
               await ref.read(authRepositoryProvider).signOut();
@@ -44,7 +44,7 @@ class HomeScreen extends ConsumerWidget {
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/qr-scan'),
               label: const Text(
-                'Rent PowerBank',
+                'Alquilar PowerBank',
                 style: TextStyle(fontWeight: FontWeight.w900),
               ),
               icon: const Icon(Icons.qr_code_scanner_rounded),
@@ -57,9 +57,9 @@ class HomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             BrandHeader(
-              title: 'Hello, ${user?.name ?? 'User'}',
+              title: 'Hola, ${user?.name ?? 'Usuario'}',
               subtitle:
-                  'Find a station, scan the QR code, and keep your phone alive all day.',
+                  'Encuentra una estacion, escanea el codigo QR y mantente con bateria todo el dia.',
               trailing: const BrandLogo(size: 72, showShadow: false),
             ),
             const SizedBox(height: 18),
@@ -94,7 +94,7 @@ class HomeScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Active Rental',
+                            'Alquiler activo',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   color: Colors.white,
@@ -102,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                           ),
                           Text(
-                            'You have a powerbank in use',
+                            'Tienes un powerbank en uso',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.78),
                             ),
@@ -139,9 +139,9 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Current balance',
-                          style: TextStyle(color: ChargeGoColors.muted),
+                        Text(
+                          'Saldo actual',
+                          style: TextStyle(color: premiumMutedColor(context)),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -149,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
                           style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w900,
-                                color: ChargeGoColors.navy,
+                                color: premiumTextColor(context),
                               ),
                         ),
                       ],
@@ -157,7 +157,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   TextButton(
                     onPressed: () => context.push('/payment'),
-                    child: const Text('Manage'),
+                    child: const Text('Gestionar'),
                   ),
                 ],
               ),
@@ -185,7 +185,7 @@ class HomeScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Find a Station',
+                            'Encuentra una estacion',
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(
                                   color: Colors.white,
@@ -194,7 +194,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Explore nearby ChargeGO points and live availability.',
+                            'Explora puntos ChargeGO cercanos y disponibilidad real.',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.78),
                               height: 1.35,
@@ -221,7 +221,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const SectionTitle('Quick Actions'),
+            const SectionTitle('Acciones rapidas'),
             const SizedBox(height: 14),
             GridView.count(
               shrinkWrap: true,
@@ -233,38 +233,40 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 PremiumIconTile(
                   icon: Icons.person_rounded,
-                  label: 'My profile',
+                  label: 'Mi perfil',
                   onTap: () => context.push('/profile'),
                 ),
                 PremiumIconTile(
                   icon: Icons.history_rounded,
-                  label: 'History',
+                  label: 'Historial',
                   onTap: () => context.push('/history'),
                 ),
                 PremiumIconTile(
                   icon: Icons.payment_rounded,
-                  label: 'Payment methods',
+                  label: 'Metodos de pago',
                   onTap: () => context.push('/payment'),
                 ),
                 PremiumIconTile(
                   icon: Icons.share_rounded,
-                  label: 'Invite friends',
+                  label: 'Invitar amigos',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Sharing feature coming soon!'),
+                        content: Text(
+                          'La funcion de compartir llegara pronto.',
+                        ),
                       ),
                     );
                   },
                 ),
                 PremiumIconTile(
                   icon: Icons.help_outline_rounded,
-                  label: 'Help/support',
+                  label: 'Ayuda/soporte',
                   onTap: () => context.push('/support'),
                 ),
                 PremiumIconTile(
                   icon: Icons.settings_outlined,
-                  label: 'Settings',
+                  label: 'Ajustes',
                   onTap: () => context.push('/settings'),
                 ),
               ],

@@ -17,10 +17,10 @@ class ProfileScreen extends ConsumerWidget {
 
     return PremiumScaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Perfil'),
         actions: [
           IconButton(
-            tooltip: 'Edit profile',
+            tooltip: 'Editar perfil',
             icon: const Icon(Icons.edit_rounded),
             onPressed: () async {
               await context.push('/edit-profile');
@@ -31,8 +31,8 @@ class ProfileScreen extends ConsumerWidget {
       body: authUser == null
           ? const EmptyState(
               icon: Icons.person_off_rounded,
-              title: 'No user connected',
-              subtitle: 'Sign in again to view your profile.',
+              title: 'No hay usuario conectado',
+              subtitle: 'Inicia sesion de nuevo para ver tu perfil.',
             )
           : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
@@ -84,22 +84,22 @@ class ProfileScreen extends ConsumerWidget {
                         children: [
                           _ProfileTile(
                             icon: Icons.history_rounded,
-                            title: 'Rental History',
+                            title: 'Historial de alquileres',
                             onTap: () => context.push('/history'),
                           ),
                           _ProfileTile(
                             icon: Icons.payment_rounded,
-                            title: 'Payment Methods',
+                            title: 'Metodos de pago',
                             onTap: () => context.push('/payment'),
                           ),
                           _ProfileTile(
                             icon: Icons.help_outline_rounded,
-                            title: 'Support',
+                            title: 'Soporte',
                             onTap: () => context.push('/support'),
                           ),
                           _ProfileTile(
                             icon: Icons.settings_outlined,
-                            title: 'Settings',
+                            title: 'Ajustes',
                             onTap: () => context.push('/settings'),
                           ),
                         ],
@@ -114,7 +114,7 @@ class ProfileScreen extends ConsumerWidget {
                           color: ChargeGoColors.danger,
                         ),
                         title: const Text(
-                          'Logout',
+                          'Cerrar sesion',
                           style: TextStyle(
                             color: ChargeGoColors.danger,
                             fontWeight: FontWeight.w800,

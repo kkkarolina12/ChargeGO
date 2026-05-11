@@ -12,13 +12,13 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeControllerProvider);
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
         children: [
           const BrandHeader(
-            title: 'Appearance',
-            subtitle: 'Choose the look that feels right for your ChargeGO day.',
+            title: 'Apariencia',
+            subtitle: 'Elige el estilo que prefieres para ChargeGO.',
             compact: true,
             trailing: Icon(
               Icons.auto_awesome_rounded,
@@ -37,7 +37,7 @@ class SettingsScreen extends ConsumerWidget {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: ChargeGoColors.sky.withValues(alpha: 0.22),
+                        color: premiumSoftFill(context),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -48,7 +48,7 @@ class SettingsScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Theme',
+                        'Tema',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w900),
                       ),
@@ -63,12 +63,12 @@ class SettingsScreen extends ConsumerWidget {
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.light,
                         icon: Icon(Icons.light_mode_outlined),
-                        label: Text('Light'),
+                        label: Text('Claro'),
                       ),
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.dark,
                         icon: Icon(Icons.dark_mode_outlined),
-                        label: Text('Dark'),
+                        label: Text('Oscuro'),
                       ),
                     ],
                     selected: {themeMode},

@@ -12,7 +12,7 @@ class SupportChatScreen extends StatefulWidget {
 class _SupportChatScreenState extends State<SupportChatScreen> {
   final _messageController = TextEditingController();
   final List<Map<String, dynamic>> _messages = [
-    {'text': 'Hello! How can we help you today?', 'isUser': false},
+    {'text': 'Hola! Como podemos ayudarte hoy?', 'isUser': false},
   ];
 
   void _sendMessage() {
@@ -25,8 +25,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         if (mounted) {
           setState(() {
             _messages.add({
-              'text':
-                  'Thank you for your message. An agent will be with you shortly.',
+              'text': 'Gracias por tu mensaje. Un agente te respondera pronto.',
               'isUser': false,
             });
           });
@@ -38,7 +37,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   @override
   Widget build(BuildContext context) {
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('Support Chat')),
+      appBar: AppBar(title: const Text('Soporte')),
       body: Column(
         children: [
           Expanded(
@@ -63,7 +62,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     decoration: const InputDecoration(
-                      hintText: 'Type a message...',
+                      hintText: 'Escribe un mensaje...',
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -106,7 +105,7 @@ class _ChatBubble extends StatelessWidget {
                   colors: [ChargeGoColors.royal, ChargeGoColors.electric],
                 )
               : null,
-          color: isUser ? null : Colors.white,
+          color: isUser ? null : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(18).copyWith(
             bottomRight: isUser ? const Radius.circular(4) : null,
             bottomLeft: !isUser ? const Radius.circular(4) : null,
@@ -122,7 +121,7 @@ class _ChatBubble extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            color: isUser ? Colors.white : ChargeGoColors.graphite,
+            color: isUser ? Colors.white : premiumTextColor(context),
             height: 1.35,
           ),
         ),

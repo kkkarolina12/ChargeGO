@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:chargego/src/core/theme/app_theme.dart';
 import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -153,9 +152,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             children: [
               BrandHeader(
-                title: 'Edit profile',
-                subtitle:
-                    'Keep your ChargeGO identity polished and up to date.',
+                title: 'Editar perfil',
+                subtitle: 'Manten tu identidad ChargeGO actualizada.',
                 compact: true,
                 trailing: GestureDetector(
                   onTap: _pickImage,
@@ -212,9 +210,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Pulsa la foto para cambiar avatar',
-                style: TextStyle(color: ChargeGoColors.muted),
+                style: TextStyle(color: premiumMutedColor(context)),
               ),
             ],
           ),

@@ -15,13 +15,13 @@ class RentalHistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(rentalHistoryProvider(user?.id ?? ''));
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('Rental History')),
+      appBar: AppBar(title: const Text('Historial de alquileres')),
       body: historyAsync.when(
         data: (rentals) => rentals.isEmpty
             ? const EmptyState(
                 icon: Icons.history_rounded,
-                title: 'No history found',
-                subtitle: 'Your completed rentals will appear here.',
+                title: 'No hay historial',
+                subtitle: 'Tus alquileres finalizados apareceran aqui.',
               )
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
@@ -53,7 +53,7 @@ class RentalHistoryScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Rental #${rental.id}',
+                                'Alquiler #${rental.id}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -63,16 +63,16 @@ class RentalHistoryScreen extends ConsumerWidget {
                               const SizedBox(height: 4),
                               Text(
                                 DateFormat(
-                                  'MMM dd, yyyy HH:mm',
+                                  'dd/MM/yyyy HH:mm',
                                 ).format(rental.startTime),
-                                style: const TextStyle(
-                                  color: ChargeGoColors.muted,
+                                style: TextStyle(
+                                  color: premiumMutedColor(context),
                                 ),
                               ),
                               Text(
-                                '$minutes mins',
-                                style: const TextStyle(
-                                  color: ChargeGoColors.muted,
+                                '$minutes min',
+                                style: TextStyle(
+                                  color: premiumMutedColor(context),
                                 ),
                               ),
                             ],

@@ -16,18 +16,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingData> _pages = const [
     OnboardingData(
-      title: 'Welcome to ChargeGO',
-      description: 'Premium power bank rental, ready wherever your day moves.',
+      title: 'Bienvenido a ChargeGO',
+      description:
+          'Alquiler premium de powerbanks, listo donde se mueva tu dia.',
       image: Icons.electric_bolt_rounded,
     ),
     OnboardingData(
-      title: 'Find a Station',
-      description: 'Locate nearby ChargeGO points with live availability.',
+      title: 'Encuentra una estacion',
+      description: 'Localiza puntos ChargeGO cercanos con disponibilidad real.',
       image: Icons.location_on_rounded,
     ),
     OnboardingData(
-      title: 'Scan & Go',
-      description: 'Scan the QR code, unlock your battery, and keep moving.',
+      title: 'Escanea y listo',
+      description:
+          'Escanea el QR, desbloquea tu bateria y sigue en movimiento.',
       image: Icons.qr_code_scanner_rounded,
     ),
   ];
@@ -86,8 +88,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: double.infinity,
                   child: GradientButton(
                     label: _currentPage == _pages.length - 1
-                        ? 'Get Started'
-                        : 'Next',
+                        ? 'Empezar'
+                        : 'Siguiente',
                     icon: _currentPage == _pages.length - 1
                         ? Icons.arrow_forward_rounded
                         : Icons.navigate_next_rounded,
@@ -106,7 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 if (_currentPage != _pages.length - 1)
                   TextButton(
                     onPressed: () => context.go('/login'),
-                    child: const Text('Skip'),
+                    child: const Text('Omitir'),
                   ),
               ],
             ),
@@ -146,10 +148,9 @@ class OnboardingPage extends StatelessWidget {
           PremiumCard(
             padding: const EdgeInsets.all(28),
             gradient: LinearGradient(
-              colors: [
-                Colors.white,
-                ChargeGoColors.frost.withValues(alpha: 0.8),
-              ],
+              colors: isPremiumDark(context)
+                  ? const [Color(0xFF111A28), Color(0xFF16243A)]
+                  : [Colors.white, ChargeGoColors.frost.withValues(alpha: 0.8)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -174,7 +175,7 @@ class OnboardingPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: ChargeGoColors.navy,
+                    color: premiumTextColor(context),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -182,7 +183,7 @@ class OnboardingPage extends StatelessWidget {
                   data.description,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: ChargeGoColors.muted,
+                    color: premiumMutedColor(context),
                     height: 1.45,
                   ),
                 ),

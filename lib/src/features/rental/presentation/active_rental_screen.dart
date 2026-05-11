@@ -42,7 +42,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
 
     return PremiumScaffold(
       appBar: AppBar(
-        title: const Text('Active Rental'),
+        title: const Text('Alquiler activo'),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.go('/home'),
@@ -53,8 +53,8 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
           : rental == null
           ? const EmptyState(
               icon: Icons.battery_unknown_rounded,
-              title: 'No active rental found',
-              subtitle: 'Start a new rental from the home screen.',
+              title: 'No hay alquiler activo',
+              subtitle: 'Inicia un nuevo alquiler desde la pantalla principal.',
             )
           : Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
@@ -62,9 +62,9 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const BrandHeader(
-                    title: 'Enjoy your ChargeGO',
+                    title: 'Disfruta tu ChargeGO',
                     subtitle:
-                        'Your rental is active. Return the powerbank when you are done.',
+                        'Tu alquiler esta activo. Devuelve el powerbank cuando termines.',
                     compact: true,
                     trailing: Icon(
                       Icons.battery_charging_full_rounded,
@@ -78,7 +78,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
                   _buildDetailsCard(rental),
                   const Spacer(),
                   GradientButton(
-                    label: 'RETURN POWERBANK',
+                    label: 'DEVOLVER POWERBANK',
                     icon: Icons.assignment_return_rounded,
                     onPressed: () async {
                       await ref
@@ -88,7 +88,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Rental completed successfully!'),
+                          content: Text('Alquiler finalizado correctamente.'),
                         ),
                       );
                       context.go('/home');
@@ -103,42 +103,44 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
   Widget _buildTimerCard(Duration elapsed, double price) {
     return PremiumCard(
       gradient: LinearGradient(
-        colors: [Colors.white, ChargeGoColors.frost.withValues(alpha: 0.92)],
+        colors: isPremiumDark(context)
+            ? const [Color(0xFF111A28), Color(0xFF16243A)]
+            : [Colors.white, ChargeGoColors.frost.withValues(alpha: 0.92)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
       child: Column(
         children: [
-          const Text(
-            'ELAPSED TIME',
+          Text(
+            'TIEMPO TRANSCURRIDO',
             style: TextStyle(
               fontSize: 13,
               letterSpacing: 1.2,
               fontWeight: FontWeight.w800,
-              color: ChargeGoColors.muted,
+              color: premiumMutedColor(context),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             _formatDuration(elapsed),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 46,
               fontWeight: FontWeight.w900,
-              color: ChargeGoColors.navy,
+              color: premiumTextColor(context),
             ),
           ),
           const SizedBox(height: 18),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: ChargeGoColors.sky.withValues(alpha: 0.18),
+              color: premiumSoftFill(context),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Estimated Price',
+                  'Precio estimado',
                   style: TextStyle(fontWeight: FontWeight.w800),
                 ),
                 Text(
@@ -163,16 +165,20 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
         children: [
           _buildDetailRow(
             Icons.location_on_outlined,
-            'Pick-up Station',
-            'Main Square Station (Mock)',
+            'Estacion de recogida',
+            'Estacion central (demo)',
           ),
           const Divider(height: 24),
-          _buildDetailRow(Icons.vibration, 'PowerBank ID', rental.powerBankId),
+          _buildDetailRow(
+            Icons.vibration,
+            'ID del PowerBank',
+            rental.powerBankId,
+          ),
           const Divider(height: 24),
           _buildDetailRow(
             Icons.access_time_rounded,
-            'Start Time',
-            DateFormat('HH:mm, MMM d').format(rental.startTime),
+            'Hora de inicio',
+            DateFormat('HH:mm, dd/MM').format(rental.startTime),
           ),
         ],
       ),
@@ -186,7 +192,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: ChargeGoColors.sky.withValues(alpha: 0.2),
+            color: premiumSoftFill(context),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Icon(icon, size: 21, color: ChargeGoColors.royal),
@@ -198,9 +204,9 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: ChargeGoColors.muted,
+                  color: premiumMutedColor(context),
                 ),
               ),
               Text(

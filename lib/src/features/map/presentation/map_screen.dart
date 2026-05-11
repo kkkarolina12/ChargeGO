@@ -36,7 +36,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Find a Station'),
+        title: const Text('Buscar estacion'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -50,7 +50,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               position: LatLng(station.latitude, station.longitude),
               infoWindow: InfoWindow(
                 title: station.name,
-                snippet: '${station.availableCount} available',
+                snippet: '${station.availableCount} disponibles',
               ),
               onTap: () => _showStationDetails(station),
             );
@@ -83,7 +83,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          '${stations.length} ChargeGO stations nearby',
+                          '${stations.length} estaciones ChargeGO cerca',
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),
@@ -143,7 +143,7 @@ class StationDetailsSheet extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         station.address,
-                        style: const TextStyle(color: ChargeGoColors.muted),
+                        style: TextStyle(color: premiumMutedColor(context)),
                       ),
                     ],
                   ),
@@ -162,7 +162,7 @@ class StationDetailsSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    available ? 'Available' : 'Empty',
+                    available ? 'Disponible' : 'Vacia',
                     style: TextStyle(
                       color: available
                           ? ChargeGoColors.success
@@ -179,7 +179,7 @@ class StationDetailsSheet extends StatelessWidget {
                 Expanded(
                   child: _InfoItem(
                     icon: Icons.battery_charging_full_rounded,
-                    label: 'Available',
+                    label: 'Disponibles',
                     value: station.availableCount.toString(),
                   ),
                 ),
@@ -187,7 +187,7 @@ class StationDetailsSheet extends StatelessWidget {
                 Expanded(
                   child: _InfoItem(
                     icon: Icons.power_rounded,
-                    label: 'Total Slots',
+                    label: 'Espacios',
                     value: station.totalSlots.toString(),
                   ),
                 ),
@@ -197,7 +197,7 @@ class StationDetailsSheet extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: GradientButton(
-                label: 'Unlock Powerbank',
+                label: 'Desbloquear PowerBank',
                 icon: Icons.lock_open_rounded,
                 onPressed: available
                     ? () {
@@ -230,7 +230,7 @@ class _InfoItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChargeGoColors.frost.withValues(alpha: 0.72),
+        color: premiumSoftFill(context),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -243,7 +243,7 @@ class _InfoItem extends StatelessWidget {
           ),
           Text(
             label,
-            style: const TextStyle(color: ChargeGoColors.muted, fontSize: 12),
+            style: TextStyle(color: premiumMutedColor(context), fontSize: 12),
           ),
         ],
       ),

@@ -68,19 +68,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const Center(child: BrandLogo(size: 96)),
               const SizedBox(height: 22),
               Text(
-                'Create Account',
+                'Crear cuenta',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: ChargeGoColors.navy,
+                  color: premiumTextColor(context),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Join ChargeGO and rent a battery in seconds.',
+                'Unete a ChargeGO y alquila una bateria en segundos.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: ChargeGoColors.muted,
+                  color: premiumMutedColor(context),
                   height: 1.4,
                 ),
               ),
@@ -91,7 +91,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Correo electronico',
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -99,7 +99,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         if (value == null ||
                             value.isEmpty ||
                             !value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return 'Introduce un correo valido';
                         }
                         return null;
                       },
@@ -108,7 +108,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _passwordController,
                       decoration: const InputDecoration(
-                        labelText: 'Password',
+                        labelText: 'Contrasena',
                         prefixIcon: Icon(Icons.lock_outline),
                       ),
                       obscureText: true,
@@ -116,7 +116,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         if (value == null ||
                             value.isEmpty ||
                             value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return 'La contrasena debe tener al menos 6 caracteres';
                         }
                         return null;
                       },
@@ -125,13 +125,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       decoration: const InputDecoration(
-                        labelText: 'Confirm Password',
+                        labelText: 'Confirmar contrasena',
                         prefixIcon: Icon(Icons.verified_user_outlined),
                       ),
                       obscureText: true,
                       validator: (value) {
                         if (value != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return 'Las contrasenas no coinciden';
                         }
                         return null;
                       },
@@ -140,7 +140,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: GradientButton(
-                        label: 'Sign Up',
+                        label: 'Registrarse',
                         icon: Icons.person_add_alt_1_rounded,
                         isLoading: _isLoading,
                         onPressed: _submit,
@@ -153,13 +153,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Already have an account? ',
-                    style: TextStyle(color: ChargeGoColors.muted),
+                  Text(
+                    'Ya tienes cuenta? ',
+                    style: TextStyle(color: premiumMutedColor(context)),
                   ),
                   TextButton(
                     onPressed: () => context.pop(),
-                    child: const Text('Sign In'),
+                    child: const Text('Iniciar sesion'),
                   ),
                 ],
               ),

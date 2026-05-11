@@ -1,4 +1,3 @@
-import 'package:chargego/src/core/theme/app_theme.dart';
 import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:flutter/material.dart';
@@ -66,19 +65,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const Center(child: BrandLogo(size: 112)),
               const SizedBox(height: 24),
               Text(
-                'Welcome Back',
+                'Bienvenido de nuevo',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: ChargeGoColors.navy,
+                  color: premiumTextColor(context),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Sign in to unlock stations, rentals and payments.',
+                'Inicia sesion para acceder a estaciones, alquileres y pagos.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: ChargeGoColors.muted,
+                  color: premiumMutedColor(context),
                   height: 1.4,
                 ),
               ),
@@ -89,7 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Correo electronico',
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -97,7 +96,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         if (value == null ||
                             value.isEmpty ||
                             !value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return 'Introduce un correo valido';
                         }
                         return null;
                       },
@@ -106,7 +105,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       decoration: const InputDecoration(
-                        labelText: 'Password',
+                        labelText: 'Contrasena',
                         prefixIcon: Icon(Icons.lock_outline),
                       ),
                       obscureText: true,
@@ -114,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         if (value == null ||
                             value.isEmpty ||
                             value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return 'La contrasena debe tener al menos 6 caracteres';
                         }
                         return null;
                       },
@@ -124,14 +123,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {},
-                        child: const Text('Forgot Password?'),
+                        child: const Text('Olvidaste tu contrasena?'),
                       ),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: GradientButton(
-                        label: 'Sign In',
+                        label: 'Iniciar sesion',
                         icon: Icons.login_rounded,
                         isLoading: _isLoading,
                         onPressed: _submit,
@@ -144,13 +143,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Don't have an account? ",
-                    style: TextStyle(color: ChargeGoColors.muted),
+                  Text(
+                    'No tienes cuenta? ',
+                    style: TextStyle(color: premiumMutedColor(context)),
                   ),
                   TextButton(
                     onPressed: () => context.push('/register'),
-                    child: const Text('Sign Up'),
+                    child: const Text('Registrarse'),
                   ),
                 ],
               ),
