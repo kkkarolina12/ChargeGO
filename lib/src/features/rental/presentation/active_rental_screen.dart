@@ -1,5 +1,6 @@
 import 'package:chargego/src/core/theme/app_theme.dart';
 import 'package:chargego/src/core/widgets/premium_widgets.dart';
+import 'package:chargego/src/features/rental/domain/rental.dart';
 import 'package:chargego/src/features/rental/presentation/rental_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,10 +21,18 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
   void initState() {
     super.initState();
     if (widget.powerBankId != null) {
-      Future.microtask(() {
-        ref
-            .read(rentalControllerProvider.notifier)
-            .startNewRental(widget.powerBankId!);
+      Future.microtask(() async {
+        try {
+          await ref
+              .read(rentalControllerProvider.notifier)
+              .startNewRental(widget.powerBankId!);
+        } catch (error) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(_cleanError(error))));
+          context.go('/home');
+        }
       });
     }
   }
@@ -33,6 +42,73 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
     return '${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds';
+  }
+
+  Future<String?> _askReturnStationCode() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Devolver bateria'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Codigo de estacion',
+              hintText: 'Escanea o introduce el codigo',
+              prefixIcon: Icon(Icons.pin_outlined),
+            ),
+            onSubmitted: (value) {
+              final text = value.trim();
+              if (text.isNotEmpty) Navigator.of(context).pop(text);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) Navigator.of(context).pop(text);
+              },
+              child: const Text('Devolver'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    return code;
+  }
+
+  Future<void> _returnRental() async {
+    final stationCode = await _askReturnStationCode();
+    if (stationCode == null || stationCode.isEmpty) return;
+
+    try {
+      final completedRental = await ref
+          .read(rentalControllerProvider.notifier)
+          .stopRental(stationCode);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Alquiler finalizado. Coste total: ${_formatMoney(completedRental.totalCost)}',
+          ),
+        ),
+      );
+      context.go('/history');
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_cleanError(error))));
+    }
   }
 
   @override
@@ -80,19 +156,8 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
                   GradientButton(
                     label: 'DEVOLVER POWERBANK',
                     icon: Icons.assignment_return_rounded,
-                    onPressed: () async {
-                      await ref
-                          .read(rentalControllerProvider.notifier)
-                          .stopRental();
-                      if (!context.mounted) return;
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Alquiler finalizado correctamente.'),
-                        ),
-                      );
-                      context.go('/home');
-                    },
+                    isLoading: state.isLoading,
+                    onPressed: _returnRental,
                   ),
                 ],
               ),
@@ -140,11 +205,11 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Precio estimado',
+                  'Coste estimado',
                   style: TextStyle(fontWeight: FontWeight.w800),
                 ),
                 Text(
-                  '\$${price.toStringAsFixed(2)}',
+                  _formatMoney(price),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
@@ -159,14 +224,14 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     );
   }
 
-  Widget _buildDetailsCard(rental) {
+  Widget _buildDetailsCard(Rental rental) {
     return PremiumCard(
       child: Column(
         children: [
           _buildDetailRow(
             Icons.location_on_outlined,
             'Estacion de recogida',
-            'Estacion central (demo)',
+            rental.stationStartName ?? rental.stationIdStart,
           ),
           const Divider(height: 24),
           _buildDetailRow(
@@ -180,6 +245,8 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
             'Hora de inicio',
             DateFormat('HH:mm, dd/MM').format(rental.startTime),
           ),
+          const Divider(height: 24),
+          _buildDetailRow(Icons.sell_outlined, 'Tarifa', _rateLabel(rental)),
         ],
       ),
     );
@@ -222,4 +289,24 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
       ],
     );
   }
+}
+
+String _formatMoney(double value) => '${value.toStringAsFixed(2)} EUR';
+
+String _rateLabel(Rental rental) {
+  final name = rental.rateName ?? 'Tarifa activa';
+  final price = rental.pricePerHour;
+  if (price == null || price <= 0) return name;
+  final maxDay = rental.maxDailyPrice;
+  final maxDayLabel = maxDay == null
+      ? ''
+      : ' · max ${_formatMoney(maxDay)}/dia';
+  return '$name · ${_formatMoney(price)}/hora$maxDayLabel';
+}
+
+String _cleanError(Object error) {
+  final message = error.toString();
+  return message.startsWith('Exception: ')
+      ? message.substring('Exception: '.length)
+      : message;
 }

@@ -2,6 +2,7 @@ import 'package:chargego/src/core/theme/app_theme.dart';
 import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
 import 'package:chargego/src/features/history/data/history_repository.dart';
+import 'package:chargego/src/features/rental/domain/rental.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -29,62 +30,93 @@ class RentalHistoryScreen extends ConsumerWidget {
                 separatorBuilder: (_, __) => const SizedBox(height: 14),
                 itemBuilder: (context, index) {
                   final rental = rentals[index];
-                  final minutes =
-                      rental.endTime?.difference(rental.startTime).inMinutes ??
-                      0;
+                  final minutes = _rentalMinutes(rental);
                   return PremiumCard(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: ChargeGoColors.sky.withValues(alpha: 0.22),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Icon(
-                            Icons.battery_charging_full_rounded,
-                            color: ChargeGoColors.royal,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Alquiler #${rental.id}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w900,
+                        Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: ChargeGoColors.sky.withValues(
+                                  alpha: 0.22,
                                 ),
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat(
-                                  'dd/MM/yyyy HH:mm',
-                                ).format(rental.startTime),
-                                style: TextStyle(
-                                  color: premiumMutedColor(context),
-                                ),
-                              ),
-                              Text(
-                                '$minutes min',
-                                style: TextStyle(
-                                  color: premiumMutedColor(context),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '\$${rental.totalCost.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
+                              child: const Icon(
+                                Icons.battery_charging_full_rounded,
                                 color: ChargeGoColors.royal,
                               ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Bateria ${rental.powerBankId}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '$minutes min · ${rental.rateName ?? 'Tarifa aplicada'}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: premiumMutedColor(context),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              _formatMoney(rental.totalCost),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: ChargeGoColors.royal,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: premiumSoftFill(context),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              _HistoryLine(
+                                icon: Icons.login_rounded,
+                                label: 'Alquiler',
+                                station:
+                                    rental.stationStartName ??
+                                    rental.stationIdStart,
+                                date: rental.startTime,
+                              ),
+                              if (rental.endTime != null) ...[
+                                const SizedBox(height: 10),
+                                _HistoryLine(
+                                  icon: Icons.assignment_return_rounded,
+                                  label: 'Devolucion',
+                                  station:
+                                      rental.stationEndName ??
+                                      rental.stationIdEnd ??
+                                      'Sin estacion',
+                                  date: rental.endTime!,
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -97,3 +129,55 @@ class RentalHistoryScreen extends ConsumerWidget {
     );
   }
 }
+
+class _HistoryLine extends StatelessWidget {
+  const _HistoryLine({
+    required this.icon,
+    required this.label,
+    required this.station,
+    required this.date,
+  });
+
+  final IconData icon;
+  final String label;
+  final String station;
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: ChargeGoColors.royal),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$label · $station',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              Text(
+                DateFormat('dd/MM/yyyy HH:mm').format(date),
+                style: TextStyle(
+                  color: premiumMutedColor(context),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+int _rentalMinutes(Rental rental) {
+  final endTime = rental.endTime;
+  if (endTime == null) return 0;
+  return endTime.difference(rental.startTime).inMinutes.clamp(1, 999999);
+}
+
+String _formatMoney(double value) => '${value.toStringAsFixed(2)} EUR';

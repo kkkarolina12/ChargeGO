@@ -27,7 +27,9 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     final code = _manualCodeController.text.trim();
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Introduce el codigo de la estacion.')),
+        const SnackBar(
+          content: Text('Introduce el codigo de estacion o bateria.'),
+        ),
       );
       return;
     }
@@ -135,7 +137,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
                       textCapitalization: TextCapitalization.characters,
                       decoration: const InputDecoration(
                         labelText: 'Codigo manual',
-                        hintText: 'Codigo de estacion',
+                        hintText: 'Codigo de estacion o bateria',
                         prefixIcon: Icon(Icons.pin_outlined),
                       ),
                       onSubmitted: (_) => _submitManualCode(),

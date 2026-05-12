@@ -320,12 +320,12 @@ class StationDetailsSheet extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: GradientButton(
-                label: 'Desbloquear PowerBank',
+                label: 'Alquilar en esta estacion',
                 icon: Icons.lock_open_rounded,
                 onPressed: available
                     ? () {
                         context.pop();
-                        context.push('/qr-scan');
+                        context.push('/active-rental', extra: station.id);
                       }
                     : null,
               ),

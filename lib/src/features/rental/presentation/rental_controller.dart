@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
+import 'package:chargego/src/features/history/data/history_repository.dart';
 import 'package:chargego/src/features/rental/data/rental_repository.dart';
 import 'package:chargego/src/features/rental/domain/rental.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,14 +37,15 @@ class RentalState {
 class RentalController extends StateNotifier<RentalState> {
   final RentalRepository _repository;
   final AuthRepository _authRepository;
+  final Ref _ref;
   Timer? _timer;
 
-  RentalController(this._repository, this._authRepository)
+  RentalController(this._repository, this._authRepository, this._ref)
     : super(RentalState()) {
     _init();
   }
 
-  void _init() async {
+  Future<void> _init() async {
     state = state.copyWith(isLoading: true);
     final user = _authRepository.currentUser;
     if (user == null) {
@@ -50,35 +53,51 @@ class RentalController extends StateNotifier<RentalState> {
       return;
     }
 
-    final rental = await _repository.getActiveRental(user.id);
-    if (rental != null) {
-      state = state.copyWith(activeRental: rental, isLoading: false);
-      _startTimer();
-    } else {
+    try {
+      final rental = await _repository.getActiveRental(user.id);
+      if (rental != null) {
+        state = state.copyWith(
+          activeRental: rental,
+          elapsed: DateTime.now().difference(rental.startTime),
+          estimatedPrice: _calculatePrice(rental, DateTime.now()),
+          isLoading: false,
+        );
+        _startTimer();
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (_) {
       state = state.copyWith(isLoading: false);
     }
   }
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (state.activeRental != null) {
-        final now = DateTime.now();
-        final elapsed = now.difference(state.activeRental!.startTime);
-        final price = _calculatePrice(elapsed);
-        state = state.copyWith(elapsed: elapsed, estimatedPrice: price);
-      }
-    });
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    _tick();
   }
 
-  double _calculatePrice(Duration elapsed) {
-    // Simple price: $1.00 per hour, minimum $0.50
-    final hours = elapsed.inSeconds / 3600;
-    final price = 0.50 + (hours * 1.0);
-    return double.parse(price.toStringAsFixed(2));
+  void _tick() {
+    final rental = state.activeRental;
+    if (rental == null) return;
+
+    final now = DateTime.now();
+    state = state.copyWith(
+      elapsed: now.difference(rental.startTime),
+      estimatedPrice: _calculatePrice(rental, now),
+    );
   }
 
-  Future<void> startNewRental(String powerBankId) async {
+  double _calculatePrice(Rental rental, DateTime at) {
+    return calculateRentalCost(
+      startTime: rental.startTime,
+      endTime: at,
+      pricePerHour: rental.pricePerHour ?? 0,
+      maxDailyPrice: rental.maxDailyPrice,
+    );
+  }
+
+  Future<void> startNewRental(String rentalCode) async {
     state = state.copyWith(isLoading: true);
     try {
       final user = _authRepository.currentUser;
@@ -88,29 +107,44 @@ class RentalController extends StateNotifier<RentalState> {
 
       final rental = await _repository.startRental(
         userId: user.id,
-        powerBankId: powerBankId,
-        stationIdStart: 'station_001',
+        rentalCode: rentalCode,
       );
-      state = state.copyWith(activeRental: rental, isLoading: false);
+      state = state.copyWith(
+        activeRental: rental,
+        elapsed: Duration.zero,
+        estimatedPrice: _calculatePrice(rental, DateTime.now()),
+        isLoading: false,
+      );
       _startTimer();
-    } catch (e) {
+      _ref.invalidate(rentalHistoryProvider(user.id));
+    } catch (_) {
       state = state.copyWith(isLoading: false);
+      rethrow;
     }
   }
 
-  Future<void> stopRental() async {
-    if (state.activeRental == null) return;
+  Future<Rental> stopRental(String returnStationCode) async {
+    final rental = state.activeRental;
+    if (rental == null) {
+      throw Exception('No hay alquiler activo.');
+    }
+
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.endRental(
-        state.activeRental!.id,
-        'station_002',
-        totalCost: state.estimatedPrice,
+      final completedRental = await _repository.endRental(
+        rental.id,
+        returnStationCode: returnStationCode,
       );
+      final user = _authRepository.currentUser;
+      if (user != null) {
+        _ref.invalidate(rentalHistoryProvider(user.id));
+      }
       _timer?.cancel();
       state = RentalState();
-    } catch (e) {
+      return completedRental;
+    } catch (_) {
       state = state.copyWith(isLoading: false);
+      rethrow;
     }
   }
 
@@ -125,5 +159,5 @@ final rentalControllerProvider =
     StateNotifierProvider<RentalController, RentalState>((ref) {
       final repository = ref.watch(rentalRepositoryProvider);
       final authRepository = ref.watch(authRepositoryProvider);
-      return RentalController(repository, authRepository);
+      return RentalController(repository, authRepository, ref);
     });
