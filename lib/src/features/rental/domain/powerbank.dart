@@ -19,9 +19,7 @@ class PowerBank {
       id: (json['id'] ?? json['id_bateria']) as String,
       serialNumber: (json['serialNumber'] ?? json['id_bateria']) as String,
       batteryLevel: (batteryLevel as num).toDouble(),
-      status: _powerBankStatusFromString(
-        (json['status'] ?? json['estado']) as String?,
-      ),
+      status: _powerBankStatusFromValue(json['status'] ?? json['estado']),
     );
   }
 
@@ -58,17 +56,24 @@ class PowerBank {
   }
 }
 
-PowerBankStatus _powerBankStatusFromString(String? value) {
-  switch (value?.toLowerCase()) {
+PowerBankStatus _powerBankStatusFromValue(dynamic value) {
+  if (value is bool) {
+    return value ? PowerBankStatus.inUse : PowerBankStatus.available;
+  }
+
+  switch (value?.toString().trim().toLowerCase()) {
     case 'en_uso':
     case 'en uso':
     case 'in_use':
     case 'inuse':
+    case 'ocupada':
+    case 'ocupado':
       return PowerBankStatus.inUse;
     case 'cargando':
     case 'charging':
       return PowerBankStatus.charging;
     case 'disponible':
+    case 'libre':
     case 'activa':
     case 'activo':
     case 'available':

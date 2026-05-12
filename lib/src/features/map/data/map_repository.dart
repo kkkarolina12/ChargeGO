@@ -85,11 +85,17 @@ bool _isStationVisible(Map<String, dynamic> data) {
 }
 
 bool _isBatteryAvailable(dynamic statusValue) {
-  final status = (statusValue ?? 'disponible').toString().toLowerCase();
+  if (statusValue is bool) return !statusValue;
+
+  final status = (statusValue ?? 'disponible')
+      .toString()
+      .trim()
+      .toLowerCase();
   return {
     'disponible',
     'available',
     'cargada',
+    'libre',
     'activo',
     'activa',
   }.contains(status);

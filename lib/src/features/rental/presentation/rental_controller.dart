@@ -129,7 +129,6 @@ class RentalController extends StateNotifier<RentalState> {
       throw Exception('No hay alquiler activo.');
     }
 
-    state = state.copyWith(isLoading: true);
     try {
       final completedRental = await _repository.endRental(
         rental.id,
@@ -140,12 +139,15 @@ class RentalController extends StateNotifier<RentalState> {
         _ref.invalidate(rentalHistoryProvider(user.id));
       }
       _timer?.cancel();
-      state = RentalState();
       return completedRental;
     } catch (_) {
-      state = state.copyWith(isLoading: false);
       rethrow;
     }
+  }
+
+  void clearRental() {
+    _timer?.cancel();
+    state = RentalState();
   }
 
   @override

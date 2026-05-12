@@ -17,6 +17,8 @@ class ActiveRentalScreen extends ConsumerStatefulWidget {
 }
 
 class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
+  bool _isReturning = false;
+
   @override
   void initState() {
     super.initState();
@@ -89,22 +91,22 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     final stationCode = await _askReturnStationCode();
     if (stationCode == null || stationCode.isEmpty) return;
 
+    setState(() => _isReturning = true);
+    final rentalController = ref.read(rentalControllerProvider.notifier);
     try {
-      final completedRental = await ref
-          .read(rentalControllerProvider.notifier)
-          .stopRental(stationCode);
-      if (!mounted) return;
+      await rentalController.stopRental(stationCode);
+      if (!mounted) {
+        rentalController.clearRental();
+        return;
+      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Alquiler finalizado. Coste total: ${_formatMoney(completedRental.totalCost)}',
-          ),
-        ),
-      );
       context.go('/history');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        rentalController.clearRental();
+      });
     } catch (error) {
       if (!mounted) return;
+      setState(() => _isReturning = false);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(_cleanError(error))));
@@ -156,7 +158,7 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
                   GradientButton(
                     label: 'DEVOLVER POWERBANK',
                     icon: Icons.assignment_return_rounded,
-                    isLoading: state.isLoading,
+                    isLoading: state.isLoading || _isReturning,
                     onPressed: _returnRental,
                   ),
                 ],
@@ -300,8 +302,8 @@ String _rateLabel(Rental rental) {
   final maxDay = rental.maxDailyPrice;
   final maxDayLabel = maxDay == null
       ? ''
-      : ' · max ${_formatMoney(maxDay)}/dia';
-  return '$name · ${_formatMoney(price)}/hora$maxDayLabel';
+      : ' - max ${_formatMoney(maxDay)}/dia';
+  return '$name - ${_formatMoney(price)}/hora$maxDayLabel';
 }
 
 String _cleanError(Object error) {
