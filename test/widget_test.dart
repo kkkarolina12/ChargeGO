@@ -20,7 +20,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Welcome to ChargeGO'), findsOneWidget);
+    expect(find.text('Bienvenido a ChargeGO'), findsOneWidget);
   });
 }
 

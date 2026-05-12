@@ -138,60 +138,80 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 34, 28, 12),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const BrandLogo(size: 132),
-          const SizedBox(height: 32),
-          PremiumCard(
-            padding: const EdgeInsets.all(28),
-            gradient: LinearGradient(
-              colors: isPremiumDark(context)
-                  ? const [Color(0xFF111A28), Color(0xFF16243A)]
-                  : [Colors.white, ChargeGoColors.frost.withValues(alpha: 0.8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 82,
-                  height: 82,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [ChargeGoColors.royal, ChargeGoColors.electric],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 520;
+        final logoSize = compact ? 82.0 : 132.0;
+        final iconSize = compact ? 62.0 : 82.0;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(28, compact ? 16 : 34, 28, 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              BrandLogo(size: logoSize),
+              SizedBox(height: compact ? 18 : 32),
+              PremiumCard(
+                padding: EdgeInsets.all(compact ? 18 : 28),
+                gradient: LinearGradient(
+                  colors: isPremiumDark(context)
+                      ? const [Color(0xFF111A28), Color(0xFF16243A)]
+                      : [
+                          Colors.white,
+                          ChargeGoColors.frost.withValues(alpha: 0.8),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: iconSize,
+                      height: iconSize,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            ChargeGoColors.royal,
+                            ChargeGoColors.electric,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(compact ? 20 : 24),
+                      ),
+                      child: Icon(
+                        data.image,
+                        size: compact ? 32 : 40,
+                        color: Colors.white,
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Icon(data.image, size: 40, color: Colors.white),
+                    SizedBox(height: compact ? 16 : 24),
+                    Text(
+                      data.title,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: premiumTextColor(context),
+                            fontSize: compact ? 22 : null,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      data.description,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: premiumMutedColor(context),
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  data.title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: premiumTextColor(context),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  data.description,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: premiumMutedColor(context),
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

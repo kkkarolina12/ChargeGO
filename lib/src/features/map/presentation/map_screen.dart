@@ -4,6 +4,7 @@ import 'package:chargego/src/features/map/data/map_repository.dart';
 import 'package:chargego/src/features/map/domain/station.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -15,9 +16,99 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  final LatLng _initialPosition = const LatLng(51.5074, -0.1278);
+  static const LatLng _fallbackPosition = LatLng(41.6176, 0.62);
 
-  void _onMapCreated(GoogleMapController controller) {}
+  GoogleMapController? _mapController;
+  LatLng? _currentPosition;
+  bool _canUseLocation = false;
+  bool _isLoadingLocation = false;
+  String? _locationError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentLocation();
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _moveCameraToCurrentLocation();
+  }
+
+  Future<void> _loadCurrentLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+      _locationError = null;
+    });
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _setLocationUnavailable('Activa la ubicacion del dispositivo.');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied) {
+        _setLocationUnavailable('Permiso de ubicacion denegado.');
+        return;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _setLocationUnavailable(
+          'Permiso bloqueado. Activalo desde los ajustes del sistema.',
+        );
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+        _canUseLocation = true;
+        _isLoadingLocation = false;
+      });
+      _moveCameraToCurrentLocation();
+    } catch (_) {
+      _setLocationUnavailable('No se pudo obtener tu ubicacion.');
+    }
+  }
+
+  void _setLocationUnavailable(String message) {
+    if (!mounted) return;
+    setState(() {
+      _canUseLocation = false;
+      _isLoadingLocation = false;
+      _locationError = message;
+    });
+  }
+
+  Future<void> _moveCameraToCurrentLocation() async {
+    final position = _currentPosition;
+    final controller = _mapController;
+    if (position == null || controller == null) return;
+
+    await controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: position, zoom: 15),
+      ),
+    );
+  }
 
   void _showStationDetails(Station station) {
     showModalBottomSheet(
@@ -44,29 +135,35 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
       body: stationsAsyncValue.when(
         data: (stations) {
-          final markers = stations.map((station) {
-            return Marker(
-              markerId: MarkerId(station.id),
-              position: LatLng(station.latitude, station.longitude),
-              infoWindow: InfoWindow(
-                title: station.name,
-                snippet: '${station.availableCount} disponibles',
-              ),
-              onTap: () => _showStationDetails(station),
-            );
-          }).toSet();
+          final markers = stations
+              .where(
+                (station) => station.latitude != 0 || station.longitude != 0,
+              )
+              .map((station) {
+                return Marker(
+                  markerId: MarkerId(station.id),
+                  position: LatLng(station.latitude, station.longitude),
+                  infoWindow: InfoWindow(
+                    title: station.name,
+                    snippet: '${station.availableCount} disponibles',
+                  ),
+                  onTap: () => _showStationDetails(station),
+                );
+              })
+              .toSet();
 
           return Stack(
             children: [
               GoogleMap(
                 onMapCreated: _onMapCreated,
                 initialCameraPosition: CameraPosition(
-                  target: _initialPosition,
-                  zoom: 13,
+                  target: _currentPosition ?? _fallbackPosition,
+                  zoom: _currentPosition == null ? 13 : 15,
                 ),
                 markers: markers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
+                myLocationEnabled: _canUseLocation,
+                myLocationButtonEnabled: _canUseLocation,
+                zoomControlsEnabled: false,
               ),
               Positioned(
                 top: 16,
@@ -76,14 +173,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.near_me_rounded,
+                      Icon(
+                        _canUseLocation
+                            ? Icons.near_me_rounded
+                            : Icons.location_on_rounded,
                         color: ChargeGoColors.royal,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          '${stations.length} estaciones ChargeGO cerca',
+                          _canUseLocation
+                              ? '${stations.length} estaciones ChargeGO cerca'
+                              : '${stations.length} estaciones ChargeGO en Lleida',
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),
@@ -91,6 +192,28 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ),
                 ),
               ),
+              if (_isLoadingLocation)
+                const Positioned(
+                  bottom: 24,
+                  left: 16,
+                  right: 16,
+                  child: _MapStatusBanner(
+                    icon: Icons.my_location_rounded,
+                    message: 'Buscando tu ubicacion...',
+                  ),
+                ),
+              if (_locationError != null)
+                Positioned(
+                  bottom: 24,
+                  left: 16,
+                  right: 16,
+                  child: _MapStatusBanner(
+                    icon: Icons.location_off_rounded,
+                    message: _locationError!,
+                    actionLabel: 'Reintentar',
+                    onActionPressed: _loadCurrentLocation,
+                  ),
+                ),
             ],
           );
         },
@@ -209,6 +332,41 @@ class StationDetailsSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MapStatusBanner extends StatelessWidget {
+  const _MapStatusBanner({
+    required this.icon,
+    required this.message,
+    this.actionLabel,
+    this.onActionPressed,
+  });
+
+  final IconData icon;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onActionPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return PremiumCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: ChargeGoColors.royal),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          if (actionLabel != null && onActionPressed != null)
+            TextButton(onPressed: onActionPressed, child: Text(actionLabel!)),
+        ],
       ),
     );
   }
