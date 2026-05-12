@@ -4,8 +4,12 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+enum QrScanMode { startRental, returnStation }
+
 class QRScannerScreen extends ConsumerStatefulWidget {
-  const QRScannerScreen({super.key});
+  const QRScannerScreen({super.key, this.mode = QrScanMode.startRental});
+
+  final QrScanMode mode;
 
   @override
   ConsumerState<QRScannerScreen> createState() => _QRScannerScreenState();
@@ -37,7 +41,16 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     setState(() {
       _isScanning = false;
     });
-    context.pushReplacement('/active-rental', extra: code);
+    _completeScan(code);
+  }
+
+  void _completeScan(String code) {
+    switch (widget.mode) {
+      case QrScanMode.startRental:
+        context.pushReplacement('/active-rental', extra: code);
+      case QrScanMode.returnStation:
+        context.pop(code);
+    }
   }
 
   void _onDetect(BarcodeCapture capture) {
@@ -52,7 +65,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
           _isScanning = false;
         });
 
-        context.pushReplacement('/active-rental', extra: code);
+        _completeScan(code);
       }
     }
   }
@@ -60,7 +73,13 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escanear codigo QR')),
+      appBar: AppBar(
+        title: Text(
+          widget.mode == QrScanMode.returnStation
+              ? 'Escanear devolucion'
+              : 'Escanear codigo QR',
+        ),
+      ),
       body: Stack(
         children: [
           MobileScanner(controller: controller, onDetect: _onDetect),
@@ -105,9 +124,12 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Apunta la camara al codigo QR',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                child: Text(
+                  widget.mode == QrScanMode.returnStation
+                      ? 'Escanea el QR de la estacion de devolucion'
+                      : 'Apunta la camara al codigo QR',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),
@@ -135,10 +157,12 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
                     child: TextField(
                       controller: _manualCodeController,
                       textCapitalization: TextCapitalization.characters,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Codigo manual',
-                        hintText: 'Codigo de estacion o bateria',
-                        prefixIcon: Icon(Icons.pin_outlined),
+                        hintText: widget.mode == QrScanMode.returnStation
+                            ? 'Codigo de estacion'
+                            : 'Codigo de estacion o bateria',
+                        prefixIcon: const Icon(Icons.pin_outlined),
                       ),
                       onSubmitted: (_) => _submitManualCode(),
                     ),

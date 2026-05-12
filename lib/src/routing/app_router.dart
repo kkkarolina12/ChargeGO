@@ -36,7 +36,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
       GoRoute(
         path: '/qr-scan',
-        builder: (context, state) => const QRScannerScreen(),
+        builder: (context, state) {
+          final mode = state.extra is QrScanMode
+              ? state.extra! as QrScanMode
+              : QrScanMode.startRental;
+          return QRScannerScreen(mode: mode);
+        },
       ),
       GoRoute(
         path: '/active-rental',

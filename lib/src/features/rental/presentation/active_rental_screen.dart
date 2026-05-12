@@ -1,5 +1,6 @@
 import 'package:chargego/src/core/theme/app_theme.dart';
 import 'package:chargego/src/core/widgets/premium_widgets.dart';
+import 'package:chargego/src/features/qr_scan/presentation/qr_scanner_screen.dart';
 import 'package:chargego/src/features/rental/domain/rental.dart';
 import 'package:chargego/src/features/rental/presentation/rental_controller.dart';
 import 'package:flutter/material.dart';
@@ -83,6 +84,17 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(_cleanError(error))));
     }
+  }
+
+  Future<void> _scanReturnStationCode() async {
+    final code = await context.push<String>(
+      '/qr-scan',
+      extra: QrScanMode.returnStation,
+    );
+    if (code == null || code.trim().isEmpty || !mounted) return;
+
+    _returnStationController.text = code.trim();
+    await _returnRental();
   }
 
   @override
@@ -234,19 +246,32 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
 
   Widget _buildReturnStationCard() {
     return PremiumCard(
-      child: TextField(
-        controller: _returnStationController,
-        enabled: !_isReturning,
-        textCapitalization: TextCapitalization.characters,
-        decoration: InputDecoration(
-          labelText: 'Codigo de estacion de devolucion',
-          hintText: 'Ej. estacionprubas',
-          prefixIcon: Icon(
-            Icons.pin_drop_outlined,
-            color: premiumMutedColor(context),
+      child: Column(
+        children: [
+          TextField(
+            controller: _returnStationController,
+            enabled: !_isReturning,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: 'Codigo de estacion de devolucion',
+              hintText: 'Ej. estacionprubas',
+              prefixIcon: Icon(
+                Icons.pin_drop_outlined,
+                color: premiumMutedColor(context),
+              ),
+            ),
+            onSubmitted: (_) => _returnRental(),
           ),
-        ),
-        onSubmitted: (_) => _returnRental(),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isReturning ? null : _scanReturnStationCode,
+              icon: const Icon(Icons.qr_code_scanner_rounded),
+              label: const Text('Escanear QR de devolucion'),
+            ),
+          ),
+        ],
       ),
     );
   }

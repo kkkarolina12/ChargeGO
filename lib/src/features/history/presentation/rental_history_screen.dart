@@ -5,6 +5,7 @@ import 'package:chargego/src/features/history/data/history_repository.dart';
 import 'package:chargego/src/features/rental/domain/rental.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class RentalHistoryScreen extends ConsumerWidget {
@@ -16,7 +17,14 @@ class RentalHistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(rentalHistoryProvider(user?.id ?? ''));
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('Historial de alquileres')),
+      appBar: AppBar(
+        title: const Text('Historial de alquileres'),
+        leading: IconButton(
+          tooltip: 'Inicio',
+          icon: const Icon(Icons.home_rounded),
+          onPressed: () => context.go('/home'),
+        ),
+      ),
       body: historyAsync.when(
         data: (rentals) => rentals.isEmpty
             ? const EmptyState(
@@ -66,7 +74,7 @@ class RentalHistoryScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '$minutes min · ${rental.rateName ?? 'Tarifa aplicada'}',
+                                    '$minutes min - ${rental.rateName ?? 'Tarifa aplicada'}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -154,7 +162,7 @@ class _HistoryLine extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$label · $station',
+                '$label - $station',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w800),

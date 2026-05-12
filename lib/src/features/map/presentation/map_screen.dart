@@ -481,12 +481,12 @@ class StationDetailsSheet extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: GradientButton(
-                label: 'Alquilar en esta estacion',
-                icon: Icons.lock_open_rounded,
+                label: 'Escanear QR o introducir codigo',
+                icon: Icons.qr_code_scanner_rounded,
                 onPressed: available
                     ? () {
                         context.pop();
-                        context.push('/active-rental', extra: station.id);
+                        context.push('/qr-scan');
                       }
                     : null,
               ),
