@@ -18,6 +18,7 @@ class ActiveRentalScreen extends ConsumerStatefulWidget {
 
 class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
   bool _isReturning = false;
+  final _returnStationController = TextEditingController();
 
   @override
   void initState() {
@@ -39,6 +40,12 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _returnStationController.dispose();
+    super.dispose();
+  }
+
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
@@ -46,51 +53,16 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
     return '${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds';
   }
 
-  Future<String?> _askReturnStationCode() async {
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Devolver bateria'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            decoration: const InputDecoration(
-              labelText: 'Codigo de estacion',
-              hintText: 'Escanea o introduce el codigo',
-              prefixIcon: Icon(Icons.pin_outlined),
-            ),
-            onSubmitted: (value) {
-              final text = value.trim();
-              if (text.isNotEmpty) Navigator.of(context).pop(text);
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final text = controller.text.trim();
-                if (text.isNotEmpty) Navigator.of(context).pop(text);
-              },
-              child: const Text('Devolver'),
-            ),
-          ],
-        );
-      },
-    );
-    controller.dispose();
-    return code;
-  }
-
   Future<void> _returnRental() async {
-    final stationCode = await _askReturnStationCode();
-    if (stationCode == null || stationCode.isEmpty) return;
+    final stationCode = _returnStationController.text.trim();
+    if (stationCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Introduce el codigo de estacion.')),
+      );
+      return;
+    }
 
+    FocusScope.of(context).unfocus();
     setState(() => _isReturning = true);
     final rentalController = ref.read(rentalControllerProvider.notifier);
     try {
@@ -136,32 +108,38 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
             )
           : Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const BrandHeader(
-                    title: 'Disfruta tu ChargeGO',
-                    subtitle:
-                        'Tu alquiler esta activo. Devuelve el powerbank cuando termines.',
-                    compact: true,
-                    trailing: Icon(
-                      Icons.battery_charging_full_rounded,
-                      color: Colors.white,
-                      size: 42,
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const BrandHeader(
+                      title: 'Disfruta tu ChargeGO',
+                      subtitle:
+                          'Tu alquiler esta activo. Devuelve el powerbank cuando termines.',
+                      compact: true,
+                      trailing: Icon(
+                        Icons.battery_charging_full_rounded,
+                        color: Colors.white,
+                        size: 42,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  _buildTimerCard(state.elapsed, state.estimatedPrice),
-                  const SizedBox(height: 18),
-                  _buildDetailsCard(rental),
-                  const Spacer(),
-                  GradientButton(
-                    label: 'DEVOLVER POWERBANK',
-                    icon: Icons.assignment_return_rounded,
-                    isLoading: state.isLoading || _isReturning,
-                    onPressed: _returnRental,
-                  ),
-                ],
+                    const SizedBox(height: 18),
+                    _buildTimerCard(state.elapsed, state.estimatedPrice),
+                    const SizedBox(height: 18),
+                    _buildDetailsCard(rental),
+                    const SizedBox(height: 18),
+                    _buildReturnStationCard(),
+                    const SizedBox(height: 22),
+                    GradientButton(
+                      label: 'DEVOLVER POWERBANK',
+                      icon: Icons.assignment_return_rounded,
+                      isLoading: state.isLoading || _isReturning,
+                      onPressed: _returnRental,
+                    ),
+                  ],
+                ),
               ),
             ),
     );
@@ -250,6 +228,25 @@ class _ActiveRentalScreenState extends ConsumerState<ActiveRentalScreen> {
           const Divider(height: 24),
           _buildDetailRow(Icons.sell_outlined, 'Tarifa', _rateLabel(rental)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReturnStationCard() {
+    return PremiumCard(
+      child: TextField(
+        controller: _returnStationController,
+        enabled: !_isReturning,
+        textCapitalization: TextCapitalization.characters,
+        decoration: InputDecoration(
+          labelText: 'Codigo de estacion de devolucion',
+          hintText: 'Ej. estacionprubas',
+          prefixIcon: Icon(
+            Icons.pin_drop_outlined,
+            color: premiumMutedColor(context),
+          ),
+        ),
+        onSubmitted: (_) => _returnRental(),
       ),
     );
   }
