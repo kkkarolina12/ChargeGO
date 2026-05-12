@@ -3,10 +3,11 @@ import 'package:chargego/src/core/widgets/premium_widgets.dart';
 import 'package:chargego/src/features/map/data/map_repository.dart';
 import 'package:chargego/src/features/map/domain/station.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -18,8 +19,11 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen> {
   static const LatLng _fallbackPosition = LatLng(41.6176, 0.62);
 
-  GoogleMapController? _mapController;
+  final _mapController = MapController();
   LatLng? _currentPosition;
+  List<Station> _stationsWithLocation = const [];
+  String _stationSignature = '';
+  bool _mapReady = false;
   bool _canUseLocation = false;
   bool _isLoadingLocation = false;
   String? _locationError;
@@ -28,17 +32,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void initState() {
     super.initState();
     _loadCurrentLocation();
-  }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    _moveCameraToCurrentLocation();
   }
 
   Future<void> _loadCurrentLocation() async {
@@ -83,7 +76,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         _canUseLocation = true;
         _isLoadingLocation = false;
       });
-      _moveCameraToCurrentLocation();
+      _moveCameraToBestView();
     } catch (_) {
       _setLocationUnavailable('No se pudo obtener tu ubicacion.');
     }
@@ -98,16 +91,45 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     });
   }
 
-  Future<void> _moveCameraToCurrentLocation() async {
-    final position = _currentPosition;
-    final controller = _mapController;
-    if (position == null || controller == null) return;
+  void _onMapReady() {
+    _mapReady = true;
+    _moveCameraToBestView();
+  }
 
-    await controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: position, zoom: 15),
-      ),
+  void _moveCameraToBestView() {
+    if (!_mapReady) return;
+
+    final stations = _stationsWithLocation;
+    if (stations.isNotEmpty) {
+      _mapController.move(_centerFor(stations), stations.length == 1 ? 15 : 13);
+      return;
+    }
+
+    _mapController.move(
+      _currentPosition ?? _fallbackPosition,
+      _currentPosition == null ? 13 : 15,
     );
+  }
+
+  void _moveCameraToCurrentLocation() {
+    final position = _currentPosition;
+    if (!_mapReady || position == null) return;
+    _mapController.move(position, 15);
+  }
+
+  void _syncStations(List<Station> stations) {
+    final signature = stations
+        .map(
+          (station) => '${station.id}:${station.latitude}:${station.longitude}',
+        )
+        .join('|');
+    if (signature == _stationSignature) return;
+
+    _stationSignature = signature;
+    _stationsWithLocation = stations;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _moveCameraToBestView();
+    });
   }
 
   void _showStationDetails(Station station) {
@@ -135,35 +157,53 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
       body: stationsAsyncValue.when(
         data: (stations) {
-          final markers = stations
-              .where(
-                (station) => station.latitude != 0 || station.longitude != 0,
-              )
-              .map((station) {
-                return Marker(
-                  markerId: MarkerId(station.id),
-                  position: LatLng(station.latitude, station.longitude),
-                  infoWindow: InfoWindow(
-                    title: station.name,
-                    snippet: '${station.availableCount} disponibles',
-                  ),
-                  onTap: () => _showStationDetails(station),
-                );
-              })
-              .toSet();
+          final stationsWithLocation = stations.where(_hasCoordinates).toList();
+          _syncStations(stationsWithLocation);
+
+          final initialTarget = stationsWithLocation.isNotEmpty
+              ? _centerFor(stationsWithLocation)
+              : _currentPosition ?? _fallbackPosition;
 
           return Stack(
             children: [
-              GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(
-                  target: _currentPosition ?? _fallbackPosition,
-                  zoom: _currentPosition == null ? 13 : 15,
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: initialTarget,
+                  initialZoom: stationsWithLocation.length == 1 ? 15 : 13,
+                  minZoom: 4,
+                  maxZoom: 18,
+                  onMapReady: _onMapReady,
                 ),
-                markers: markers,
-                myLocationEnabled: _canUseLocation,
-                myLocationButtonEnabled: _canUseLocation,
-                zoomControlsEnabled: false,
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.chargego',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      if (_currentPosition != null)
+                        Marker(
+                          point: _currentPosition!,
+                          width: 34,
+                          height: 34,
+                          child: const _CurrentLocationMarker(),
+                        ),
+                      ...stationsWithLocation.map(
+                        (station) => Marker(
+                          point: LatLng(station.latitude, station.longitude),
+                          width: 58,
+                          height: 58,
+                          child: _StationMarker(
+                            station: station,
+                            onTap: () => _showStationDetails(station),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               Positioned(
                 top: 16,
@@ -182,9 +222,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          _canUseLocation
-                              ? '${stations.length} estaciones ChargeGO cerca'
-                              : '${stations.length} estaciones ChargeGO en Lleida',
+                          _stationCountLabel(stations.length),
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),
@@ -192,6 +230,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ),
                 ),
               ),
+              const Positioned(
+                left: 10,
+                bottom: 10,
+                child: _OpenStreetMapAttribution(),
+              ),
+              if (_canUseLocation)
+                Positioned(
+                  right: 16,
+                  bottom: _locationError == null ? 24 : 92,
+                  child: FloatingActionButton.small(
+                    heroTag: 'center-location',
+                    tooltip: 'Mi ubicacion',
+                    onPressed: _moveCameraToCurrentLocation,
+                    child: const Icon(Icons.my_location_rounded),
+                  ),
+                ),
               if (_isLoadingLocation)
                 const Positioned(
                   bottom: 24,
@@ -219,6 +273,113 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
+      ),
+    );
+  }
+
+  String _stationCountLabel(int count) {
+    final unit = count == 1 ? 'estacion' : 'estaciones';
+    return '$count $unit ChargeGO en Lleida';
+  }
+}
+
+LatLng _centerFor(List<Station> stations) {
+  if (stations.isEmpty) return _MapScreenState._fallbackPosition;
+
+  var latitude = 0.0;
+  var longitude = 0.0;
+  for (final station in stations) {
+    latitude += station.latitude;
+    longitude += station.longitude;
+  }
+
+  return LatLng(latitude / stations.length, longitude / stations.length);
+}
+
+bool _hasCoordinates(Station station) {
+  final hasValidLatitude = station.latitude >= -90 && station.latitude <= 90;
+  final hasValidLongitude =
+      station.longitude >= -180 && station.longitude <= 180;
+  final isEmptyCoordinate = station.latitude == 0 && station.longitude == 0;
+  return hasValidLatitude && hasValidLongitude && !isEmptyCoordinate;
+}
+
+class _StationMarker extends StatelessWidget {
+  const _StationMarker({required this.station, required this.onTap});
+
+  final Station station;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final available = station.availableCount > 0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: available ? ChargeGoColors.royal : ChargeGoColors.danger,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: ChargeGoColors.navy.withValues(alpha: 0.28),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.ev_station_rounded,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
+    );
+  }
+}
+
+class _CurrentLocationMarker extends StatelessWidget {
+  const _CurrentLocationMarker();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: ChargeGoColors.electric.withValues(alpha: 0.18),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: ChargeGoColors.electric,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 3),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OpenStreetMapAttribution extends StatelessWidget {
+  const _OpenStreetMapAttribution();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: Text(
+          '© OpenStreetMap',
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+        ),
       ),
     );
   }

@@ -21,15 +21,15 @@ class Station {
 
   factory Station.fromJson(Map<String, dynamic> json) {
     final location = json['ubicacion'];
+    final id = _readString(json['id'] ?? json['id_estacion']);
     return Station(
-      id: (json['id'] ?? json['id_estacion']) as String,
-      name: (json['name'] ?? json['nombre']) as String,
+      id: id ?? 'estacion_sin_id',
+      name: _readString(json['name'] ?? json['nombre']) ?? 'Estacion ChargeGO',
       latitude: _readCoordinate(json, location, 'latitude', 'latitud'),
       longitude: _readCoordinate(json, location, 'longitude', 'longitud'),
-      address: (json['address'] ?? json['direccion'] ?? '') as String,
-      availableCount:
-          (json['availableCount'] ?? json['disponibles'] ?? 0) as int,
-      totalSlots: (json['totalSlots'] ?? json['capacidad_total'] ?? 0) as int,
+      address: _readString(json['address'] ?? json['direccion']) ?? '',
+      availableCount: _readInt(json['availableCount'] ?? json['disponibles']),
+      totalSlots: _readInt(json['totalSlots'] ?? json['capacidad_total']),
     );
   }
 
@@ -85,11 +85,33 @@ double _readCoordinate(
 ) {
   final value = json[englishKey] ?? json[schemaKey];
   if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.replaceAll(',', '.')) ?? 0;
 
   if (location is GeoPoint) {
     if (schemaKey == 'latitud') return location.latitude;
     if (schemaKey == 'longitud') return location.longitude;
   }
 
+  if (location is Map<String, dynamic>) {
+    final nestedValue = location[englishKey] ?? location[schemaKey];
+    if (nestedValue is num) return nestedValue.toDouble();
+    if (nestedValue is String) {
+      return double.tryParse(nestedValue.replaceAll(',', '.')) ?? 0;
+    }
+  }
+
+  return 0;
+}
+
+String? _readString(dynamic value) {
+  final text = value?.toString().trim();
+  if (text == null || text.isEmpty) return null;
+  return text;
+}
+
+int _readInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
   return 0;
 }
