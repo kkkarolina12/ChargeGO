@@ -76,6 +76,7 @@ class PremiumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(22);
+
     final card = Container(
       margin: margin,
       padding: padding,
@@ -105,7 +106,11 @@ class PremiumCard extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(onTap: onTap, borderRadius: borderRadius, child: card),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: borderRadius,
+        child: card,
+      ),
     );
   }
 }
@@ -131,10 +136,10 @@ class GradientButton extends StatelessWidget {
         gradient: onPressed == null
             ? null
             : const LinearGradient(
-                colors: [ChargeGoColors.royal, ChargeGoColors.electric],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+          colors: [ChargeGoColors.royal, ChargeGoColors.electric],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         color: onPressed == null
             ? Theme.of(context).disabledColor.withValues(alpha: 0.18)
             : null,
@@ -142,24 +147,24 @@ class GradientButton extends StatelessWidget {
         boxShadow: onPressed == null
             ? null
             : [
-                BoxShadow(
-                  color: ChargeGoColors.royal.withValues(alpha: 0.22),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                ),
-              ],
+          BoxShadow(
+            color: ChargeGoColors.royal.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : onPressed,
         icon: isLoading
             ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        )
             : Icon(icon),
         label: Text(label),
         style: ElevatedButton.styleFrom(
@@ -179,37 +184,60 @@ class GradientButton extends StatelessWidget {
 }
 
 class BrandLogo extends StatelessWidget {
-  const BrandLogo({super.key, required this.size, this.showShadow = true});
+  const BrandLogo({
+    super.key,
+    required this.size,
+    this.showShadow = true,
+  });
+
+  static const String assetPath = 'assets/branding/chargego_logo.png';
 
   final double size;
   final bool showShadow;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [ChargeGoColors.royal, ChargeGoColors.electric],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          boxShadow: showShadow
+              ? [
+            BoxShadow(
+              color: ChargeGoColors.royal.withValues(alpha: 0.22),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ]
+              : null,
         ),
-        borderRadius: BorderRadius.circular(size * 0.28),
-        boxShadow: showShadow
-            ? [
-                BoxShadow(
-                  color: ChargeGoColors.royal.withValues(alpha: 0.22),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+        child: Image.asset(
+          assetPath,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [ChargeGoColors.royal, ChargeGoColors.electric],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ]
-            : null,
-      ),
-      child: Icon(
-        Icons.battery_charging_full_rounded,
-        color: Colors.white,
-        size: size * 0.58,
+                borderRadius: BorderRadius.circular(size * 0.24),
+              ),
+              child: Icon(
+                Icons.battery_charging_full_rounded,
+                color: Colors.white,
+                size: size * 0.58,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -272,7 +300,10 @@ class BrandHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[const SizedBox(width: 16), trailing!],
+          if (trailing != null) ...[
+            const SizedBox(width: 16),
+            trailing!,
+          ],
         ],
       ),
     );
@@ -305,15 +336,17 @@ class EmptyState extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: premiumMutedColor(context)),
+                style: TextStyle(
+                  color: premiumMutedColor(context),
+                ),
               ),
             ],
           ),
@@ -366,13 +399,18 @@ class PremiumIconTile extends StatelessWidget {
               color: premiumSoftFill(context),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: ChargeGoColors.royal),
+            child: Icon(
+              icon,
+              color: ChargeGoColors.royal,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
