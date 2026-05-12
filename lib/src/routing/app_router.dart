@@ -11,6 +11,7 @@ import 'package:chargego/src/features/settings/presentation/settings_screen.dart
 import 'package:chargego/src/features/support/presentation/support_chat_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:chargego/src/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:chargego/src/features/auth/presentation/forgot_password_screen.dart';
 import 'package:chargego/src/features/auth/presentation/login_screen.dart';
 import 'package:chargego/src/features/auth/presentation/register_screen.dart';
 import 'package:chargego/src/features/auth/data/auth_repository.dart';
@@ -28,6 +29,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -83,6 +88,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authRepository.currentUser != null;
       final isLoggingIn =
           state.matchedLocation == '/login' ||
+          state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/register';
       final isOnboarding = state.matchedLocation == '/onboarding';
 
